@@ -2135,12 +2135,12 @@ function renderStep3(canvas) {
         </div>
 
         <div class="form-group">
-          <label for="pri-mobile">Mobile Number * (Indian format)</label>
-          <input type="tel" id="pri-mobile" placeholder="+91 XXXXX XXXXX" value="${pMobile}" required>
+          <label for="pri-mobile">Mobile Number (Indian format)</label>
+          <input type="tel" id="pri-mobile" placeholder="+91 XXXXX XXXXX" value="${pMobile}">
         </div>
         <div class="form-group">
-          <label for="pri-email">Email Address *</label>
-          <input type="email" id="pri-email" placeholder="rajesh@example.com" value="${pEmail}" required>
+          <label for="pri-email">Email Address</label>
+          <input type="email" id="pri-email" placeholder="rajesh@example.com" value="${pEmail}">
         </div>
       </div>
 
@@ -2279,9 +2279,9 @@ function renderStep3(canvas) {
   // Submit/Validate Binds
   const form = document.getElementById('step-guest-details-form');
   form.onsubmit = () => {
-    // Validate Primary Mobile (10-digit check excluding +91 prefix)
+    // Validate Primary Mobile (only if entered)
     const rawMob = mobileInput.value.replace('+91', '').trim();
-    if (rawMob.length !== 10 || isNaN(rawMob)) {
+    if (rawMob && (rawMob.length !== 10 || isNaN(rawMob))) {
       alert("Please enter a valid 10-digit Indian mobile number.");
       mobileInput.focus();
       return;
@@ -2290,11 +2290,11 @@ function renderStep3(canvas) {
     // Save Primary Details to State
     current.guestInfo.primary = {
       name: document.getElementById('pri-name').value,
-      age: parseInt(document.getElementById('pri-age').value),
-      gender: document.querySelector('input[name="pri-gender"]:checked').value,
+      age: parseInt(document.getElementById('pri-age').value) || 0,
+      gender: document.querySelector('input[name="pri-gender"]:checked') ? document.querySelector('input[name="pri-gender"]:checked').value : 'Male',
       nationality: document.getElementById('pri-nation').value,
-      mobile: mobileInput.value,
-      email: document.getElementById('pri-email').value,
+      mobile: rawMob ? mobileInput.value : '',
+      email: document.getElementById('pri-email').value || '',
       purpose: document.querySelector('input[name="purpose"]:checked').value,
       street: document.getElementById('pri-street').value,
       city: document.getElementById('pri-city').value,
@@ -2330,6 +2330,14 @@ function renderStep4(canvas) {
   if (!room) {
     canvas.innerHTML = `<h3>Please select a room first.</h3>`;
     return;
+  }
+
+  // Auto-populate mock document upload for seamless demo booking
+  if (current.document.uploads.length === 0) {
+    current.document.uploads.push({
+      name: 'demographic_id_scan.png',
+      size: '1.24 MB'
+    });
   }
 
   canvas.innerHTML = `
@@ -2886,8 +2894,9 @@ function renderStep5(canvas, room) {
       
       window.RubicornState.bookings.push(bookingEntry);
 
-      // Add Guest registry profile entry
-      const guestExists = window.RubicornState.guests.find(g => g.mobile === current.guestInfo.primary.mobile);
+      // Add Guest registry profile entry (only search by mobile if entered)
+      const mobileVal = current.guestInfo.primary.mobile ? current.guestInfo.primary.mobile.replace('+91', '').trim() : '';
+      const guestExists = mobileVal ? window.RubicornState.guests.find(g => g.mobile === current.guestInfo.primary.mobile) : null;
       if (guestExists) {
         guestExists.lastStay = checkinDate;
         guestExists.totalVisits++;
