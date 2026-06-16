@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rubicorn Hotels & Rooms | Where Every Stay Tells a Story</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Welcome to Rubicorn Hotels & Rooms. Immersive luxury lodging in the heart of the city. Book AC and Non-AC standard, comfort, deluxe, and royal suites.">
+  <meta name="keywords" content="Rubicorn, Hotel Booking, Luxury Hotel, Temple View Suite, Accommodation">
+  <meta name="author" content="Antigravity AI">
+  
+  <!-- Playfair Display (Serif, display headings) & Inter (Clean, body sans-serif) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons for UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=1.3">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header id="main-header" class="site-header">
+    <div class="header-container">
+      <a href="#/" class="logo-link" id="nav-logo">
+        <div class="logo-icon">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <span class="logo-text">RUBICORN HOTELS & ROOMS</span>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="desktop-nav">
+        <a href="#/" class="nav-item">Home</a>
+        <a href="#/rooms" class="nav-item" id="nav-rooms-link">Rooms & Floors</a>
+        <a href="#/amenities" class="nav-item" id="nav-amenities-link">Amenities</a>
+        <a href="#/about" class="nav-item" id="nav-about-link">About</a>
+        <a href="#/contact" class="nav-item" id="nav-contact-link">Contact</a>
+      </nav>
+ 
+      <!-- CTA Button -->
+      <div class="header-actions">
+        <a href="#/booking/step-1" class="btn-book-now">Book Now</a>
+        <button class="mobile-menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+ 
+  <!-- Mobile Full-screen Navigation Menu -->
+  <div class="mobile-menu-overlay" id="mobile-menu">
+    <div class="mobile-menu-container">
+      <nav class="mobile-nav">
+        <a href="#/" class="mobile-nav-item">Home</a>
+        <a href="#/rooms" class="mobile-nav-item" id="mob-rooms-link">Rooms & Floors</a>
+        <a href="#/amenities" class="mobile-nav-item" id="mob-amenities-link">Amenities</a>
+        <a href="#/about" class="mobile-nav-item" id="mob-about-link">About</a>
+        <a href="#/contact" class="mobile-nav-item" id="mob-contact-link">Contact</a>
+        <a href="#/booking/step-1" class="mobile-nav-cta">Book A Room</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Content Render Canvas -->
+  <main id="app" class="page-container"></main>
+
+  <!-- Global Toast Notification System -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Global Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <i class="fa-solid fa-crown gold-color"></i>
+          <span>RUBICORN HOTELS & ROOMS</span>
+        </div>
+        <p class="footer-tagline">"Where Every Stay Tells a Story"</p>
+        <p class="footer-description">City's Premier Lodging for Tourists, Pilgrims & Business Travelers.</p>
+        <div class="social-links">
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+      </div>
+      
+      <div class="footer-links-col">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="#/rooms">Browse Rooms</a></li>
+          <li><a href="#/booking/step-1">Floor Map Booking</a></li>
+          <li><a href="#/about" id="foot-about-link">About Us</a></li>
+          <li><a href="#/contact" id="foot-contact-link">Contact & Location</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h3>Contact Us</h3>
+        <ul class="contact-details">
+          <li><i class="fa-solid fa-location-dot"></i> 12, Karakambadi Road, Tirupati, Andhra Pradesh - 517507, India</li>
+          <li><i class="fa-solid fa-phone"></i> +91 98765 43210</li>
+          <li><i class="fa-solid fa-envelope"></i> reservations@rubicornhotels.com</li>
+          <li><i class="fa-solid fa-clock"></i> Check-in: 12:00 PM | Check-out: 11:00 AM</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <p>&copy; 2025 Rubicorn Hotels & Rooms. All rights reserved.</p>
+      <div class="footer-badge">
+        <a href="#/admin" class="admin-login-link"><i class="fa-solid fa-lock"></i> Admin Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main Javascript Logic -->
+  <script src="app.js?v=1.3"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "rubicorn-hotels-rooms",
+  "version": "1.0.0",
+  "description": "Rubicorn Hotels & Rooms Booking Demo Platform",
+  "main": "index.html",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "node node_modules/http-server/bin/http-server -p 3000"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
