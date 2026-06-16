@@ -160,6 +160,9 @@ function loadStateFromStorage() {
       window.RubicornState.bookings = parsed.bookings || [];
       window.RubicornState.guests = parsed.guests || [];
       window.RubicornState.adminLoggedIn = parsed.adminLoggedIn || false;
+      if (parsed.currentBooking) {
+        window.RubicornState.currentBooking = parsed.currentBooking;
+      }
       
       // Keep structural updates in case seed data template changed
       if (window.RubicornState.rooms.length !== DEFAULT_ROOMS.length) {
@@ -179,7 +182,8 @@ function saveStateToStorage() {
     rooms: window.RubicornState.rooms,
     bookings: window.RubicornState.bookings,
     guests: window.RubicornState.guests,
-    adminLoggedIn: window.RubicornState.adminLoggedIn
+    adminLoggedIn: window.RubicornState.adminLoggedIn,
+    currentBooking: window.RubicornState.currentBooking
   }));
 }
 
@@ -188,6 +192,28 @@ function resetStateStore() {
   window.RubicornState.bookings = [];
   window.RubicornState.guests = [];
   window.RubicornState.adminLoggedIn = false;
+  window.RubicornState.currentBooking = {
+    checkIn: '',
+    checkOut: '',
+    durationHours: 24,
+    guestsCount: 1,
+    roomType: 'All',
+    roomId: null,
+    extraBeds: 0,
+    addons: [],
+    guestInfo: {
+      primary: {},
+      additional: [],
+      specialRequests: ''
+    },
+    document: {
+      type: 'Aadhaar',
+      uploads: []
+    },
+    food: [],
+    coupon: null,
+    paymentMethod: 'card'
+  };
   saveStateToStorage();
 }
 
@@ -1408,7 +1434,11 @@ function renderBookingWizard(step) {
         </div>
         <div class="wizard-step-node ${step === 4 ? 'active' : (step > 4 ? 'completed' : '')}">
           <div class="step-number">${step > 4 ? '<i class="fa-solid fa-check"></i>' : '4'}</div>
-          <span class="step-label">Documents</span>
+          <span class="step-label">Preview</span>
+        </div>
+        <div class="wizard-step-node ${step === 5 ? 'active' : ''}">
+          <div class="step-number">5</div>
+          <span class="step-label">Payment</span>
         </div>
       </div>
     </header>
@@ -2011,9 +2041,17 @@ function renderStep3(canvas) {
   const pAge = p.age || '';
   const pAddress = p.address || '';
 
+  // Auto-populate mock document upload for seamless demo booking
+  if (current.document.uploads.length === 0) {
+    current.document.uploads.push({
+      name: 'demographic_id_scan.png',
+      size: '1.24 MB'
+    });
+  }
+
   canvas.innerHTML = `
-    <h3 class="wizard-step-title">Guest Details</h3>
-    <p class="wizard-step-subtitle">Please enter your basic information to proceed with the reservation.</p>
+    <h3 class="wizard-step-title">Guest Details & Verification</h3>
+    <p class="wizard-step-subtitle">Please enter your basic information and upload a valid ID document to proceed.</p>
 
     <form id="step-guest-details-form" onsubmit="return false;">
       <div class="form-section-title">Primary Guest Details</div>
@@ -2030,154 +2068,74 @@ function renderStep3(canvas) {
       </div>
 
       <div class="form-section-title">Address *</div>
-      <div class="form-group full-width" style="margin-top: 0.5rem;">
+      <div class="form-group full-width" style="margin-top: 0.5rem; margin-bottom: 2rem;">
         <label for="pri-address">Complete Address *</label>
         <textarea id="pri-address" rows="3" placeholder="Flat No, Building, Street, City, State, PIN Code" required>${pAddress}</textarea>
       </div>
 
+      <div class="form-section-title">Identity Verification Document</div>
+      <p style="font-size:0.85rem; color:var(--color-ivory-dim); margin-bottom:1rem;">Select document type and upload verification copy.</p>
+
+      <!-- ID Type Card Selector -->
+      <div class="doc-selection-grid" style="margin-bottom: 1.5rem;">
+        <label class="doc-card">
+          <input type="radio" name="doc-type" value="Aadhaar" ${current.document.type === 'Aadhaar' ? 'checked' : ''}>
+          <span class="doc-card-lbl">
+            <i class="fa-solid fa-address-card"></i>
+            <span>Aadhaar Card</span>
+          </span>
+        </label>
+        
+        <label class="doc-card">
+          <input type="radio" name="doc-type" value="Passport" ${current.document.type === 'Passport' ? 'checked' : ''}>
+          <span class="doc-card-lbl">
+            <i class="fa-solid fa-passport"></i>
+            <span>Passport</span>
+          </span>
+        </label>
+
+        <label class="doc-card">
+          <input type="radio" name="doc-type" value="Voter ID" ${current.document.type === 'Voter ID' ? 'checked' : ''}>
+          <span class="doc-card-lbl">
+            <i class="fa-solid fa-id-card-clip"></i>
+            <span>Voter ID</span>
+          </span>
+        </label>
+
+        <label class="doc-card">
+          <input type="radio" name="doc-type" value="PAN Card" ${current.document.type === 'PAN Card' ? 'checked' : ''}>
+          <span class="doc-card-lbl">
+            <i class="fa-solid fa-landmark"></i>
+            <span>PAN Card</span>
+          </span>
+        </label>
+
+        <label class="doc-card">
+          <input type="radio" name="doc-type" value="License" ${current.document.type === 'License' ? 'checked' : ''}>
+          <span class="doc-card-lbl">
+            <i class="fa-solid fa-car-side"></i>
+            <span>Driver License</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Drag drop interface -->
+      <div class="upload-zone" id="drop-upload-zone" style="margin-bottom: 1rem;">
+        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+        <h4 id="upload-box-title">Upload front side of Aadhaar Card</h4>
+        <p>Drag & drop file here or click to browse local files (JPG, PNG, PDF allowed, max 5MB)</p>
+        <input type="file" id="file-picker-input" style="display:none;" accept=".jpg,.jpeg,.png,.pdf">
+      </div>
+
+      <!-- Uploaded file list -->
+      <div class="uploaded-files-list" id="files-list-mount" style="margin-bottom: 2rem;"></div>
+
       <!-- Wizard Navigation Footer -->
       <div class="wizard-footer">
         <button type="button" class="btn-wizard-nav prev" onclick="window.location.hash='#/booking/step-2'"><i class="fa-solid fa-arrow-left"></i> Back</button>
-        <button type="submit" class="btn-wizard-nav next" id="btn-wizard-next">Continue to Documents <i class="fa-solid fa-arrow-right"></i></button>
+        <button type="submit" class="btn-wizard-nav next" id="btn-wizard-next">Continue to Preview <i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </form>
-  `;
-
-  // Alphabet validator check Binds
-  const alphaInputs = document.querySelectorAll('.validate-alphabet');
-  alphaInputs.forEach(input => {
-    input.onkeypress = (e) => {
-      const char = String.fromCharCode(e.which);
-      if (!/[a-zA-Z\s]/.test(char)) {
-        e.preventDefault();
-      }
-    };
-  });
-
-  // Submit/Validate Binds
-  const form = document.getElementById('step-guest-details-form');
-  form.onsubmit = () => {
-    // Save Primary Details to State
-    current.guestInfo.primary = {
-      name: document.getElementById('pri-name').value.trim(),
-      age: parseInt(document.getElementById('pri-age').value) || 0,
-      address: document.getElementById('pri-address').value.trim(),
-      gender: 'Male',
-      nationality: 'Indian',
-      mobile: 'N/A',
-      email: 'N/A',
-      purpose: 'pilgrimage',
-      street: document.getElementById('pri-address').value.trim(),
-      city: '',
-      state: '',
-      pin: ''
-    };
-
-    // Save Additional Guests (empty since we enter only primary details now)
-    current.guestInfo.additional = [];
-    current.guestInfo.specialRequests = '';
-
-    // Proceed to Step 4
-    window.location.hash = `#/booking/step-4`;
-  };
-}
-
-// -------------------------------------------------------------
-// STEP 4 RENDERER: Document ID Upload interface
-// -------------------------------------------------------------
-function renderStep4(canvas) {
-  const current = window.RubicornState.currentBooking;
-  const room = window.RubicornState.rooms.find(r => r.id === current.roomId);
-  
-  if (!room) {
-    canvas.innerHTML = `<h3>Please select a room first.</h3>`;
-    return;
-  }
-
-  // Auto-populate mock document upload for seamless demo booking
-  if (current.document.uploads.length === 0) {
-    current.document.uploads.push({
-      name: 'demographic_id_scan.png',
-      size: '1.24 MB'
-    });
-  }
-
-  canvas.innerHTML = `
-    <h3 class="wizard-step-title">Identity Verification — Quick & Secure</h3>
-    <p class="wizard-step-subtitle">As per local government lodging laws, a valid ID card scan is mandatory for all check-ins.</p>
-
-    <!-- Card Selector -->
-    <div class="form-section-title">Select ID Document Type</div>
-    <div class="doc-selection-grid">
-      <label class="doc-card">
-        <input type="radio" name="doc-type" value="Aadhaar" ${current.document.type === 'Aadhaar' ? 'checked' : ''}>
-        <span class="doc-card-lbl">
-          <i class="fa-solid fa-address-card"></i>
-          <span>Aadhaar Card</span>
-        </span>
-      </label>
-      
-      <label class="doc-card">
-        <input type="radio" name="doc-type" value="Passport" ${current.document.type === 'Passport' ? 'checked' : ''}>
-        <span class="doc-card-lbl">
-          <i class="fa-solid fa-passport"></i>
-          <span>Passport</span>
-        </span>
-      </label>
-
-      <label class="doc-card">
-        <input type="radio" name="doc-type" value="Voter ID" ${current.document.type === 'Voter ID' ? 'checked' : ''}>
-        <span class="doc-card-lbl">
-          <i class="fa-solid fa-id-card-clip"></i>
-          <span>Voter ID</span>
-        </span>
-      </label>
-
-      <label class="doc-card">
-        <input type="radio" name="doc-type" value="PAN Card" ${current.document.type === 'PAN Card' ? 'checked' : ''}>
-        <span class="doc-card-lbl">
-          <i class="fa-solid fa-landmark"></i>
-          <span>PAN Card</span>
-        </span>
-      </label>
-
-      <label class="doc-card">
-        <input type="radio" name="doc-type" value="License" ${current.document.type === 'License' ? 'checked' : ''}>
-        <span class="doc-card-lbl">
-          <i class="fa-solid fa-car-side"></i>
-          <span>Driver License</span>
-        </span>
-      </label>
-    </div>
-
-    <!-- Drag drop interface -->
-    <div class="upload-zone" id="drop-upload-zone">
-      <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-      <h4 id="upload-box-title">Upload front side of Aadhaar Card</h4>
-      <p>Drag & drop file here or click to browse local files (JPG, PNG, PDF allowed, max 5MB)</p>
-      <input type="file" id="file-picker-input" style="display:none;" accept=".jpg,.jpeg,.png,.pdf">
-    </div>
-
-    <!-- Uploaded file list -->
-    <div class="uploaded-files-list" id="files-list-mount"></div>
-
-    <!-- Declaration checkbox -->
-    <div style="background:rgba(255,255,255,0.02); border:1px solid var(--color-card-border); padding:1.25rem; border-radius:8px; display:flex; gap:1rem; align-items:flex-start; margin-bottom:2rem;">
-      <label class="check-container" style="margin-top:0.25rem;">
-        <input type="checkbox" id="declaration-check" ${current.document.uploads.length > 0 ? 'checked' : ''}>
-        <span class="checkmark"></span>
-      </label>
-      <div>
-        <label for="declaration-check" style="font-weight:600; cursor:pointer;">Verify declaration details</label>
-        <p style="font-size:0.8rem; color:var(--color-ivory-dim); margin-top:0.25rem;">I hereby declare that all uploaded identity files belong to me and are authentic. I understand these uploads are audited strictly for boarding compliance and will not be stored post-checkout.</p>
-      </div>
-    </div>
-
-    <!-- Wizard Navigation Footer -->
-    <div class="wizard-footer">
-      <button class="btn-wizard-nav prev" onclick="window.location.hash='#/booking/step-3'"><i class="fa-solid fa-arrow-left"></i> Back</button>
-      <button class="btn-wizard-nav next" id="btn-wizard-next" disabled>Next <i class="fa-solid fa-arrow-right"></i></button>
-    </div>
   `;
 
   // Select card toggler
@@ -2188,6 +2146,7 @@ function renderStep4(canvas) {
     radio.onchange = () => {
       current.document.type = radio.value;
       uploadBoxTitle.innerText = `Upload front side of ${radio.value}`;
+      saveStateToStorage();
     };
   });
   
@@ -2224,15 +2183,7 @@ function renderStep4(canvas) {
     }
   };
 
-  const nextBtn = document.getElementById('btn-wizard-next');
-  const decCheck = document.getElementById('declaration-check');
-
-  decCheck.onchange = () => {
-    validateContinuation();
-  };
-
   function handleSimulatedUpload(file) {
-    // Demo simulation upload: accepts everything
     const fileName = file.name;
     const fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
     
@@ -2242,7 +2193,7 @@ function renderStep4(canvas) {
     });
 
     renderUploadedList();
-    validateContinuation();
+    saveStateToStorage();
   }
 
   function renderUploadedList() {
@@ -2262,35 +2213,301 @@ function renderStep4(canvas) {
         </div>
         <div style="display:flex; align-items:center; gap:1.5rem;">
           <span class="file-status-badge"><i class="fa-solid fa-circle-check"></i> Verified ✅</span>
-          <button class="file-remove-btn" data-index="${idx}"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="file-remove-btn" data-index="${idx}" type="button"><i class="fa-solid fa-trash-can"></i></button>
         </div>
       `;
       listMount.appendChild(item);
 
-      // Remove click Binds
-      item.querySelector('.file-remove-btn').onclick = () => {
+      item.querySelector('.file-remove-btn').onclick = (e) => {
+        e.stopPropagation();
         current.document.uploads.splice(idx, 1);
         renderUploadedList();
-        validateContinuation();
+        saveStateToStorage();
       };
     });
   }
 
-  function validateContinuation() {
-    const hasUploads = current.document.uploads.length > 0;
-    const isDeclared = decCheck.checked;
-    
-    nextBtn.disabled = !(hasUploads && isDeclared);
+  // Alphabet validator check Binds
+  const alphaInputs = document.querySelectorAll('.validate-alphabet');
+  alphaInputs.forEach(input => {
+    input.onkeypress = (e) => {
+      const char = String.fromCharCode(e.which);
+      if (!/[a-zA-Z\s]/.test(char)) {
+        e.preventDefault();
+      }
+    };
+  });
+
+  // Submit/Validate Binds
+  const form = document.getElementById('step-guest-details-form');
+  form.onsubmit = () => {
+    if (current.document.uploads.length === 0) {
+      alert("Please upload at least one verification document.");
+      return;
+    }
+
+    // Save Primary Details to State
+    current.guestInfo.primary = {
+      name: document.getElementById('pri-name').value.trim(),
+      age: parseInt(document.getElementById('pri-age').value) || 0,
+      address: document.getElementById('pri-address').value.trim(),
+      gender: 'Male',
+      nationality: 'Indian',
+      mobile: 'N/A',
+      email: 'N/A',
+      purpose: 'pilgrimage',
+      street: document.getElementById('pri-address').value.trim(),
+      city: '',
+      state: '',
+      pin: ''
+    };
+
+    current.guestInfo.additional = [];
+    current.guestInfo.specialRequests = '';
+
+    saveStateToStorage();
+
+    // Proceed to Step 4 (Preview Details)
+    window.location.hash = `#/booking/step-4`;
+  };
+
+  // Initial load
+  renderUploadedList();
+}
+
+// -------------------------------------------------------------
+// STEP 4 RENDERER: Document ID Upload interface
+// -------------------------------------------------------------
+function renderStep4(canvas) {
+  const current = window.RubicornState.currentBooking;
+  const room = window.RubicornState.rooms.find(r => r.id === current.roomId);
+  
+  if (!room) {
+    canvas.innerHTML = `<h3>Please select a room first.</h3>`;
+    return;
+  }
+
+  const p = current.guestInfo.primary;
+  const is12Hours = parseInt(current.durationHours) === 12;
+  const displayDuration = is12Hours ? '12 Hours' : '24 Hours';
+  
+  // Calculations
+  const baseCost = is12Hours ? Math.max(room.price - 300, 200) : room.price;
+  const extraBedRate = room.ac ? 500 : 350;
+  const extraBedCost = current.extraBeds * extraBedRate;
+  
+  let addonsCost = 0;
+  current.addons.forEach(ad => { addonsCost += ad.price; });
+
+  const subtotal = baseCost + extraBedCost + addonsCost;
+  const taxAmount = Math.round(subtotal * 0.18);
+  const totalAmount = subtotal + taxAmount;
+
+  canvas.innerHTML = `
+    <h3 class="wizard-step-title">Preview Details</h3>
+    <p class="wizard-step-subtitle">Please review your stay and guest profile details before proceeding to payment.</p>
+
+    <div class="admin-card" style="margin-bottom: 2rem; border-color: var(--color-card-border); padding: 1.5rem;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 0.5rem;">
+        <div>
+          <h5 style="color: var(--color-gold-dark); margin-bottom: 0.5rem; font-size: 1.1rem; font-family: var(--font-serif);">Stay Details</h5>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Room:</strong> Room ${room.id} (${room.type})</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Floor:</strong> ${FLOOR_DETAILS[room.floor].name}</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Check-in:</strong> ${current.checkIn} (12:00 PM)</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Check-out:</strong> ${current.checkOut} (11:00 AM)</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Duration:</strong> ${displayDuration}</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Guests:</strong> ${current.guestsCount} Guest(s)</p>
+        </div>
+        <div>
+          <h5 style="color: var(--color-gold-dark); margin-bottom: 0.5rem; font-size: 1.1rem; font-family: var(--font-serif);">Guest Profile</h5>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Full Name:</strong> ${p.name || 'N/A'}</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Age:</strong> ${p.age || 'N/A'}</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><strong>Address:</strong> ${p.address || 'N/A'}</p>
+          <h5 style="color: var(--color-gold-dark); margin-bottom: 0.35rem; font-size: 0.95rem; font-family: var(--font-serif);">Audited Document</h5>
+          <p style="font-size: 0.9rem;">
+            <strong>Type:</strong> ${current.document.type} <br>
+            <strong>File:</strong> ${current.document.uploads[0] ? current.document.uploads[0].name : 'None'}
+          </p>
+        </div>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--color-card-border); margin: 1.5rem 0;">
+      <div>
+        <h5 style="color: var(--color-gold-dark); margin-bottom: 0.5rem; font-size: 1.1rem; font-family: var(--font-serif);">Billing Breakdown</h5>
+        <div style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.9rem;">
+          <div style="display:flex; justify-content:space-between;"><span>Room Tariff (${displayDuration})</span><span>₹${baseCost.toLocaleString('en-IN')}</span></div>
+          ${extraBedCost > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Extra Rollaway Bed(s)</span><span>₹${extraBedCost.toLocaleString('en-IN')}</span></div>` : ''}
+          ${addonsCost > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Selected Amenities Add-ons</span><span>₹${addonsCost.toLocaleString('en-IN')}</span></div>` : ''}
+          <div style="display:flex; justify-content:space-between;"><span>GST (18%)</span><span>₹${taxAmount.toLocaleString('en-IN')}</span></div>
+          <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--color-burgundy); border-top: 1px solid var(--color-card-border); padding-top: 0.5rem; font-size: 1rem;">
+            <span>Final Total</span><span>₹${totalAmount.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verification checkbox -->
+    <div style="background:rgba(255,255,255,0.02); border:1px solid var(--color-card-border); padding:1.25rem; border-radius:8px; display:flex; gap:1rem; align-items:flex-start; margin-bottom:2rem;">
+      <label class="check-container" style="margin-top:0.25rem;">
+        <input type="checkbox" id="declaration-check">
+        <span class="checkmark"></span>
+      </label>
+      <div>
+        <label for="declaration-check" style="font-weight:600; cursor:pointer;">I verify that all the details displayed above are correct.</label>
+        <p style="font-size:0.8rem; color:var(--color-ivory-dim); margin-top:0.25rem;">By checking this, I declare that the guest information, staying duration, and document uploaded match official registries and are correct.</p>
+      </div>
+    </div>
+
+    <!-- Wizard Navigation Footer -->
+    <div class="wizard-footer">
+      <button class="btn-wizard-nav prev" onclick="window.location.hash='#/booking/step-3'"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <button class="btn-wizard-nav next" id="btn-wizard-next" disabled>Continue to Payment <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+  `;
+
+  const nextBtn = document.getElementById('btn-wizard-next');
+  const decCheck = document.getElementById('declaration-check');
+
+  decCheck.onchange = () => {
+    nextBtn.disabled = !decCheck.checked;
     
     // Update Mobile CTA
     const mobBtn = document.getElementById('mobile-fixed-cta-btn');
-    if (mobBtn) mobBtn.disabled = !(hasUploads && isDeclared);
-  }
+    if (mobBtn) mobBtn.disabled = !decCheck.checked;
+  };
 
   nextBtn.onclick = () => {
-    // Show loading booking spinner
-    nextBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Confirming Booking...`;
-    nextBtn.disabled = true;
+    saveStateToStorage();
+    // Proceed to Step 5 (Payment)
+    window.location.hash = `#/booking/step-5`;
+  };
+}
+
+// -------------------------------------------------------------
+// STEP 5 RENDERER: Payment Gateway
+// -------------------------------------------------------------
+function renderStep5(canvas, room) {
+  const current = window.RubicornState.currentBooking;
+  
+  if (!room) {
+    canvas.innerHTML = `<h3>Please select a room first.</h3>`;
+    return;
+  }
+
+  canvas.innerHTML = `
+    <h3 class="wizard-step-title">Secure Payment Gateway</h3>
+    <p class="wizard-step-subtitle">Select a payment option and verify dummy credentials to secure your room block.</p>
+
+    <!-- Payment tab switches -->
+    <div class="pay-methods-tabs" style="margin-bottom: 1.5rem;">
+      <span class="pay-tab-btn active" data-method="card"><i class="fa-solid fa-credit-card"></i> Card</span>
+      <span class="pay-tab-btn" data-method="upi"><i class="fa-solid fa-qrcode"></i> UPI ID / QR</span>
+    </div>
+
+    <!-- Payment inputs -->
+    <div class="pay-form-content" id="payment-form-canvas" style="margin-bottom: 2rem;">
+      <!-- Card Payment Fields with prefilled dummy values -->
+      <div class="checkbox-group" style="gap:1rem;">
+        <div class="search-field">
+          <label for="card-number-inp">Dummy Card Number</label>
+          <input type="text" id="card-number-inp" value="4111 2222 3333 4444" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" required readonly>
+        </div>
+        <div class="form-grid" style="gap:1rem;">
+          <div class="search-field">
+            <label for="card-expiry-inp">Expiry MM/YY</label>
+            <input type="text" id="card-expiry-inp" value="12/28" placeholder="MM/YY" maxlength="5" required readonly>
+          </div>
+          <div class="search-field">
+            <label for="card-cvv-inp">CVV</label>
+            <input type="password" id="card-cvv-inp" value="123" placeholder="•••" maxlength="3" required readonly>
+          </div>
+        </div>
+        <div class="search-field">
+          <label for="card-name-inp">Name on Card</label>
+          <input type="text" id="card-name-inp" value="John Doe" placeholder="Cardholder Name" required readonly>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms Checkbox -->
+    <div style="display:flex; gap:1rem; margin-bottom:2rem; align-items:flex-start;">
+      <label class="check-container" style="margin-top:0.25rem;">
+        <input type="checkbox" id="terms-agree-check" checked>
+        <span class="checkmark"></span>
+      </label>
+      <div>
+        <label for="terms-agree-check" style="font-weight:600; cursor:pointer;">I agree to Rubicorn Hotels & Rooms Terms & Conditions</label>
+        <p style="font-size:0.8rem; color:var(--color-ivory-dim); margin-top:0.25rem;">Free cancellations are allowed until 24 hours prior to check-in.</p>
+      </div>
+    </div>
+
+    <!-- Wizard Navigation Footer -->
+    <div class="wizard-footer">
+      <button class="btn-wizard-nav prev" onclick="window.location.hash='#/booking/step-4'"><i class="fa-solid fa-arrow-left"></i> Back</button>
+      <button class="btn-wizard-nav next" id="btn-wizard-next">Pay & Block Room</button>
+    </div>
+  `;
+
+  // Binds Payment tab switches
+  const payTabs = document.querySelectorAll('.pay-tab-btn');
+  payTabs.forEach(tab => {
+    tab.onclick = () => {
+      payTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const method = tab.getAttribute('data-method');
+      const fCanvas = document.getElementById('payment-form-canvas');
+      if (method === 'card') {
+        fCanvas.innerHTML = `
+          <div class="checkbox-group" style="gap:1rem;">
+            <div class="search-field">
+              <label for="card-number-inp">Dummy Card Number</label>
+              <input type="text" id="card-number-inp" value="4111 2222 3333 4444" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" required readonly>
+            </div>
+            <div class="form-grid" style="gap:1rem;">
+              <div class="search-field">
+                <label for="card-expiry-inp">Expiry MM/YY</label>
+                <input type="text" id="card-expiry-inp" value="12/28" placeholder="MM/YY" maxlength="5" required readonly>
+              </div>
+              <div class="search-field">
+                <label for="card-cvv-inp">CVV</label>
+                <input type="password" id="card-cvv-inp" value="123" placeholder="•••" maxlength="3" required readonly>
+              </div>
+            </div>
+            <div class="search-field">
+              <label for="card-name-inp">Name on Card</label>
+              <input type="text" id="card-name-inp" value="John Doe" placeholder="Cardholder Name" required readonly>
+            </div>
+          </div>
+        `;
+      } else {
+        fCanvas.innerHTML = `
+          <div class="checkbox-group" style="gap:1.5rem; text-align:center;">
+            <div class="search-field" style="text-align:left;">
+              <label for="upi-id-inp">Dummy UPI ID</label>
+              <input type="text" id="upi-id-inp" value="rubicorn@ybl" placeholder="username@upi" required readonly>
+            </div>
+            <div style="color:var(--color-ivory-dim); font-size:0.9rem;">— OR SCAN DUMMY QR CODE —</div>
+            <div>
+              <i class="fa-solid fa-qrcode" style="font-size: 6rem; color: var(--color-gold); margin-bottom: 0.5rem;"></i>
+              <p style="font-size:0.75rem; color:var(--color-ivory-dim);">Scan this dummy gateway QR with your GPay/PhonePe App.</p>
+            </div>
+          </div>
+        `;
+      }
+    };
+  });
+
+  const termsCheck = document.getElementById('terms-agree-check');
+  const payBtn = document.getElementById('btn-wizard-next');
+
+  termsCheck.onchange = () => {
+    payBtn.disabled = !termsCheck.checked;
+    const mobBtn = document.getElementById('mobile-fixed-cta-btn');
+    if (mobBtn) mobBtn.disabled = !termsCheck.checked;
+  };
+
+  payBtn.onclick = () => {
+    payBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Secure Payment...`;
+    payBtn.disabled = true;
 
     const mobBtn = document.getElementById('mobile-fixed-cta-btn');
     if (mobBtn) {
@@ -2308,7 +2525,6 @@ function renderStep4(canvas) {
       const is12Hours = parseInt(current.durationHours) === 12;
       const displayDuration = is12Hours ? '12 Hours' : '24 Hours';
       
-      // Calculate final payable total amount for database sync
       const baseCost = is12Hours ? Math.max(room.price - 300, 200) : room.price;
       const extraBedRate = room.ac ? 500 : 350;
       const extraBedCost = current.extraBeds * extraBedRate;
@@ -2317,12 +2533,9 @@ function renderStep4(canvas) {
       current.addons.forEach(ad => { addonsCost += ad.price; });
 
       let subtotal = baseCost + extraBedCost + addonsCost;
-      
-      // Apply 18% GST
       const totalAmount = Math.round(subtotal + (subtotal * 0.18));
 
       // 2. Write details to GLOBAL state database
-      // Update room status
       const targetRoom = window.RubicornState.rooms.find(r => r.id === room.id);
       if (targetRoom) {
         targetRoom.status = 'occupied';
@@ -2375,10 +2588,7 @@ function renderStep4(canvas) {
         documents: current.document.type
       });
 
-      // Persist State
-      saveStateToStorage();
-
-      // Clear wizard parameters for the confirmation ticket
+      // Clear wizard parameters
       window.RubicornState.lastConfirmedBooking = {
         bookingId: bookingId,
         guestName: current.guestInfo.primary.name,
@@ -2394,7 +2604,6 @@ function renderStep4(canvas) {
         amount: totalAmount
       };
 
-      // Reset Current Booking state parameters
       window.RubicornState.currentBooking = {
         checkIn: '',
         checkOut: '',
@@ -2410,440 +2619,13 @@ function renderStep4(canvas) {
         coupon: null,
         paymentMethod: 'card'
       };
-
-      // Redirect to Confirmation
-      window.location.hash = `#/booking/confirmed`;
-    }, 1500);
-  };
-
-  // Initial load
-  renderUploadedList();
-  validateContinuation();
-}
-
-// -------------------------------------------------------------
-// STEP 5 RENDERER: Food & Beverages Pre-order + Promo + Payment
-// -------------------------------------------------------------
-function renderStep5(canvas, room) {
-  const current = window.RubicornState.currentBooking;
-  
-  if (!room) {
-    canvas.innerHTML = `<h3>Please select a room first.</h3>`;
-    return;
-  }
-
-  canvas.innerHTML = `
-    <h3 class="wizard-step-title">Almost There — Complete Your Booking</h3>
-    <p class="wizard-step-subtitle">Pre-order hot room service meals, apply promotional coupon codes, and select your demo gateway.</p>
-
-    <!-- F&B Section -->
-    <div class="form-section-title">Pre-Order Room Service (Optional)</div>
-    <p style="font-size:0.85rem; color:var(--color-ivory-dim); margin-bottom:1.5rem;">Select dining packages delivered straight to your room door. Added to final bill total.</p>
-    
-    <div class="food-tabs">
-      <button class="food-tab-btn active" data-tab="breakfast">Breakfast</button>
-      <button class="food-tab-btn" data-tab="lunch">Lunch</button>
-      <button class="food-tab-btn" data-tab="dinner">Dinner</button>
-      <button class="food-tab-btn" data-tab="beverages">Beverages</button>
-    </div>
-
-    <!-- Food list grid -->
-    <div class="food-items-grid" id="food-items-mount"></div>
-
-    <!-- Coupon Code -->
-    <div class="form-section-title">Coupon Promo Code</div>
-    <div class="coupon-wrapper">
-      <div class="coupon-form">
-        <input type="text" id="coupon-input" placeholder="Enter coupon code (e.g. RUBICORN10)" value="${current.coupon || ''}">
-        <button id="btn-apply-coupon">Apply</button>
-      </div>
-      <div class="coupon-msg" id="coupon-msg-mount"></div>
-    </div>
-
-    <!-- Demo Payment Gateway Selector -->
-    <div class="form-section-title">Select Secure Gateway (Simulated)</div>
-    
-    <div class="pay-methods-tabs">
-      <span class="pay-tab-btn ${current.paymentMethod === 'card' ? 'active' : ''}" data-method="card"><i class="fa-solid fa-credit-card"></i> Card</span>
-      <span class="pay-tab-btn ${current.paymentMethod === 'upi' ? 'active' : ''}" data-method="upi"><i class="fa-solid fa-qrcode"></i> UPI ID / QR</span>
-      <span class="pay-tab-btn ${current.paymentMethod === 'net' ? 'active' : ''}" data-method="net"><i class="fa-solid fa-building-columns"></i> Net Banking</span>
-      <span class="pay-tab-btn ${current.paymentMethod === 'wallet' ? 'active' : ''}" data-method="wallet"><i class="fa-solid fa-wallet"></i> Wallet</span>
-    </div>
-
-    <div class="pay-form-content" id="payment-form-canvas"></div>
-
-    <!-- Final Checkbox -->
-    <div style="display:flex; gap:1rem; margin-bottom:2rem; align-items:flex-start;">
-      <label class="check-container" style="margin-top:0.25rem;">
-        <input type="checkbox" id="terms-agree-check">
-        <span class="checkmark"></span>
-      </label>
-      <div>
-        <label for="terms-agree-check" style="font-weight:600; cursor:pointer;">I agree to Rubicorn Hotels & Rooms Terms & Conditions</label>
-        <p style="font-size:0.8rem; color:var(--color-ivory-dim); margin-top:0.25rem;">Free cancellations are allowed until 24 hours prior check-in. Any cancellations within 24 hours are charged 50% of the room booking amount. No refunds in case of no-show.</p>
-      </div>
-    </div>
-
-    <!-- Wizard Navigation Footer -->
-    <div class="wizard-footer">
-      <button class="btn-wizard-nav prev" onclick="window.location.hash='#/booking/step-4'"><i class="fa-solid fa-arrow-left"></i> Back</button>
-      <button class="btn-wizard-nav next" id="btn-wizard-next" disabled>Pay & Block Room</button>
-    </div>
-  `;
-
-  // F&B rendering binds
-  let activeFoodTab = 'breakfast';
-  const foodTabBtns = document.querySelectorAll('.food-tab-btn');
-  foodTabBtns.forEach(btn => {
-    btn.onclick = () => {
-      foodTabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeFoodTab = btn.getAttribute('data-tab');
-      renderFoodTab(activeFoodTab);
-    };
-  });
-
-  function renderFoodTab(tabName) {
-    const mount = document.getElementById('food-items-mount');
-    mount.innerHTML = '';
-    
-    const items = FOOD_MENU[tabName];
-    items.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'food-card';
       
-      const inCart = current.food.find(f => f.id === item.id);
-      const qty = inCart ? inCart.qty : 0;
-
-      card.innerHTML = `
-        <div class="food-card-img-wrap" id="food-img-${item.id}"></div>
-        <div class="food-card-details">
-          <div>
-            <h5>${item.name}</h5>
-            <p style="font-size:0.75rem; color:var(--color-ivory-dim); margin-top:0.15rem;">${item.description}</p>
-          </div>
-          <div style="display:flex; justify-content:between; align-items:center; width:100%; margin-top:0.5rem;">
-            <span class="food-card-price">₹${item.price}</span>
-            <div class="food-qty-selector">
-              <button class="qty-btn" style="width:24px; height:24px; font-size:0.9rem;" id="food-dec-${item.id}">-</button>
-              <span class="qty-val" style="font-size:0.95rem;" id="food-qty-${item.id}">${qty}</span>
-              <button class="qty-btn" style="width:24px; height:24px; font-size:0.9rem;" id="food-inc-${item.id}">+</button>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      mount.appendChild(card);
-      mountGeminiImage(card.querySelector(`#food-img-${item.id}`), tabName, item.name, 'food-card-img');
-
-      // food qty click events
-      card.querySelector(`#food-dec-${item.id}`).onclick = () => {
-        const cartItemIdx = current.food.findIndex(f => f.id === item.id);
-        if (cartItemIdx > -1) {
-          if (current.food[cartItemIdx].qty > 1) {
-            current.food[cartItemIdx].qty--;
-            card.querySelector(`#food-qty-${item.id}`).innerText = current.food[cartItemIdx].qty;
-          } else {
-            current.food.splice(cartItemIdx, 1);
-            card.querySelector(`#food-qty-${item.id}`).innerText = 0;
-          }
-          renderOrderSummary(room);
-        }
-      };
-
-      card.querySelector(`#food-inc-${item.id}`).onclick = () => {
-        const cartItem = current.food.find(f => f.id === item.id);
-        if (cartItem) {
-          cartItem.qty++;
-          card.querySelector(`#food-qty-${item.id}`).innerText = cartItem.qty;
-        } else {
-          current.food.push({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            qty: 1
-          });
-          card.querySelector(`#food-qty-${item.id}`).innerText = 1;
-        }
-        renderOrderSummary(room);
-      };
-
-    });
-  }
-
-  // Coupon handler binds
-  const couponInp = document.getElementById('coupon-input');
-  const applyBtn = document.getElementById('btn-apply-coupon');
-  const couponMsg = document.getElementById('coupon-msg-mount');
-
-  applyBtn.onclick = () => {
-    const code = couponInp.value.trim().toUpperCase();
-    if (code === 'RUBICORN10') {
-      current.coupon = code;
-      couponMsg.className = 'coupon-msg success';
-      couponMsg.innerText = 'Coupon applied successfully! 10% discount subtracted.';
-    } else if (code === 'PILGRIM50') {
-      current.coupon = code;
-      couponMsg.className = 'coupon-msg success';
-      couponMsg.innerText = 'Coupon applied successfully! Flat ₹50 discount subtracted.';
-    } else {
-      current.coupon = null;
-      couponMsg.className = 'coupon-msg error';
-      couponMsg.innerText = 'Invalid coupon code. Try RUBICORN10 or PILGRIM50.';
-    }
-    renderOrderSummary(room);
-  };
-
-  // Pre-load coupon messages
-  if (current.coupon) {
-    applyBtn.click();
-  }
-
-  // Payment tab switches
-  const payTabs = document.querySelectorAll('.pay-tab-btn');
-  payTabs.forEach(tab => {
-    tab.onclick = () => {
-      payTabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      current.paymentMethod = tab.getAttribute('data-method');
-      loadPaymentForm(current.paymentMethod);
-    };
-  });
-
-  function loadPaymentForm(method) {
-    const fCanvas = document.getElementById('payment-form-canvas');
-    if (method === 'card') {
-      fCanvas.innerHTML = `
-        <div class="checkbox-group" style="gap:1rem;">
-          <div class="search-field">
-            <label for="card-number-inp">Card Number</label>
-            <input type="text" id="card-number-inp" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" required>
-          </div>
-          <div class="form-grid" style="gap:1rem;">
-            <div class="search-field">
-              <label for="card-expiry-inp">Expiry MM/YY</label>
-              <input type="text" id="card-expiry-inp" placeholder="MM/YY" maxlength="5" required>
-            </div>
-            <div class="search-field">
-              <label for="card-cvv-inp">CVV</label>
-              <input type="password" id="card-cvv-inp" placeholder="•••" maxlength="3" required>
-            </div>
-          </div>
-          <div class="search-field">
-            <label for="card-name-inp">Name on Card</label>
-            <input type="text" id="card-name-inp" placeholder="Cardholder Name" required>
-          </div>
-        </div>
-      `;
-      // Card number space formatter Binds
-      const cardInp = document.getElementById('card-number-inp');
-      cardInp.onkeyup = () => {
-        let val = cardInp.value.replace(/\D/g, '');
-        let formatted = val.match(/.{1,4}/g);
-        cardInp.value = formatted ? formatted.join(' ') : '';
-      };
-      
-      const expiryInp = document.getElementById('card-expiry-inp');
-      expiryInp.onkeyup = () => {
-        let val = expiryInp.value.replace(/\D/g, '');
-        if (val.length > 2) {
-          expiryInp.value = val.substring(0,2) + '/' + val.substring(2,4);
-        } else {
-          expiryInp.value = val;
-        }
-      };
-    } else if (method === 'upi') {
-      fCanvas.innerHTML = `
-        <div class="checkbox-group" style="gap:1.5rem; text-align:center;">
-          <div class="search-field" style="text-align:left;">
-            <label for="upi-id-inp">Virtual Payment Address (VPA / UPI ID)</label>
-            <input type="text" id="upi-id-inp" placeholder="username@upi" required>
-          </div>
-          <div style="color:var(--color-ivory-dim); font-size:0.9rem;">— OR SCAN STATIC QR CODE —</div>
-          <div>
-            <i class="fa-solid fa-qrcode" style="font-size: 6rem; color: var(--color-gold); margin-bottom: 0.5rem;"></i>
-            <p style="font-size:0.75rem; color:var(--color-ivory-dim);">Scan this secure gateway QR with your phone GPay/PhonePe App.</p>
-          </div>
-        </div>
-      `;
-    } else if (method === 'net') {
-      fCanvas.innerHTML = `
-        <div class="search-field">
-          <label for="bank-select">Select Bank Name</label>
-          <select id="bank-select" style="width:100%;">
-            <option value="SBI">State Bank of India (SBI)</option>
-            <option value="HDFC">HDFC Bank</option>
-            <option value="ICICI">ICICI Bank</option>
-            <option value="AXIS">Axis Bank</option>
-            <option value="KOTAK">Kotak Mahindra Bank</option>
-          </select>
-        </div>
-      `;
-    } else {
-      fCanvas.innerHTML = `
-        <div class="checkbox-group" style="gap:1.5rem; text-align:center;">
-          <div style="display:flex; justify-content:center; gap:2rem; font-size:2.5rem; color:var(--color-gold);">
-            <i class="fa-brands fa-paypal"></i>
-            <i class="fa-solid fa-wallet"></i>
-          </div>
-          <p style="font-size:0.85rem; color:var(--color-ivory-dim);">You will be redirected to choose phone wallets (Paytm, Google Pay, PhonePe) securely.</p>
-        </div>
-      `;
-    }
-  }
-
-  // Terms checkbox binds
-  const termsCheck = document.getElementById('terms-agree-check');
-  const payBtn = document.getElementById('btn-wizard-next');
-
-  termsCheck.onchange = () => {
-    payBtn.disabled = !termsCheck.checked;
-    
-    // Mobile CTA sync
-    const mobBtn = document.getElementById('mobile-fixed-cta-btn');
-    if (mobBtn) mobBtn.disabled = !termsCheck.checked;
-  };
-
-  // Pay button submission logic
-  payBtn.onclick = () => {
-    // Show loading payment spinner
-    payBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Secure Payment...`;
-    payBtn.disabled = true;
-
-    const mobBtn = document.getElementById('mobile-fixed-cta-btn');
-    if (mobBtn) {
-      mobBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
-      mobBtn.disabled = true;
-    }
-
-    setTimeout(() => {
-      // 1. Generate booking ID
-      const randomDigits = Math.floor(100000 + Math.random() * 900000);
-      const bookingId = `RBC-2025-${randomDigits}`;
-      
-      const checkinDate = current.checkIn;
-      const checkoutDate = current.checkOut;
-      const is12Hours = parseInt(current.durationHours) === 12;
-      const displayDuration = is12Hours ? '12 Hours' : '24 Hours';
-      
-      // Calculate final payable total amount for database sync
-      const baseCost = is12Hours ? Math.max(room.price - 300, 200) : room.price;
-      const extraBedRate = room.ac ? 500 : 350;
-      const extraBedCost = current.extraBeds * extraBedRate;
-      
-      let addonsCost = 0;
-      current.addons.forEach(ad => { addonsCost += ad.price; });
-
-      let foodCost = 0;
-      current.food.forEach(fd => { foodCost += fd.price * fd.qty; });
-
-      let subtotal = baseCost + extraBedCost + addonsCost + foodCost;
-      let discount = 0;
-      if (current.coupon === 'RUBICORN10') discount = subtotal * 0.1;
-      else if (current.coupon === 'PILGRIM50') discount = 50;
-      
-      subtotal = Math.max(subtotal - discount, 0);
-      const totalAmount = Math.round(subtotal + (subtotal * 0.18) + (subtotal * 0.05));
-
-      // 2. Write details to GLOBAL state database
-      // Update room status
-      const targetRoom = window.RubicornState.rooms.find(r => r.id === room.id);
-      targetRoom.status = 'occupied';
-      targetRoom.currentGuest = {
-        name: current.guestInfo.primary.name,
-        bookingId: bookingId,
-        checkIn: checkinDate,
-        checkOut: checkoutDate,
-        guestsCount: current.guestsCount,
-        extraBeds: current.extraBeds,
-        duration: displayDuration
-      };
-      targetRoom.checkIn = checkinDate;
-      targetRoom.checkOut = checkoutDate;
-
-      // Add Booking Entry
-      const bookingEntry = {
-        bookingId: bookingId,
-        roomId: room.id,
-        roomType: room.type,
-        floor: room.floor,
-        guestName: current.guestInfo.primary.name,
-        checkIn: checkinDate,
-        checkOut: checkoutDate,
-        nights: displayDuration,
-        guests: current.guestsCount,
-        extras: current.extraBeds > 0 ? `${current.extraBeds} Extra Rollaway Bed(s)` : 'None',
-        food: current.food.map(f => `${f.name} (x${f.qty})`).join(', ') || 'None',
-        totalAmount: totalAmount,
-        status: 'confirmed',
-        bookingDate: getFormattedDate(0)
-      };
-      
-      window.RubicornState.bookings.push(bookingEntry);
-
-      // Add Guest registry profile entry (only search by mobile if entered)
-      const mobileVal = current.guestInfo.primary.mobile ? current.guestInfo.primary.mobile.replace('+91', '').trim() : '';
-      const guestExists = mobileVal ? window.RubicornState.guests.find(g => g.mobile === current.guestInfo.primary.mobile) : null;
-      if (guestExists) {
-        guestExists.lastStay = checkinDate;
-        guestExists.totalVisits++;
-        guestExists.totalSpent += totalAmount;
-      } else {
-        window.RubicornState.guests.push({
-          id: `GST-${Math.floor(1000 + Math.random() * 9000)}`,
-          name: current.guestInfo.primary.name,
-          mobile: current.guestInfo.primary.mobile,
-          email: current.guestInfo.primary.email,
-          lastStay: checkinDate,
-          totalVisits: 1,
-          totalSpent: totalAmount,
-          documents: current.document.type
-        });
-      }
-
-      // Persist State
       saveStateToStorage();
-
-      // Clear wizard parameters
-      window.RubicornState.lastConfirmedBooking = {
-        bookingId: bookingId,
-        guestName: current.guestInfo.primary.name,
-        email: current.guestInfo.primary.email,
-        roomNo: room.id,
-        roomName: room.type,
-        floor: room.floor,
-        checkIn: checkinDate,
-        checkOut: checkoutDate,
-        nights: displayDuration,
-        guests: current.guestsCount,
-        extras: current.extraBeds > 0 ? `${current.extraBeds} Extra Bed` : 'None',
-        amount: totalAmount
-      };
-
-      // Reset Current Booking state parameters
-      window.RubicornState.currentBooking = {
-        checkIn: '',
-        checkOut: '',
-        durationHours: 24,
-        guestsCount: 1,
-        roomType: 'All',
-        roomId: null,
-        extraBeds: 0,
-        addons: [],
-        guestInfo: { primary: {}, additional: [], specialRequests: '' },
-        document: { type: 'Aadhaar', uploads: [] },
-        food: [],
-        coupon: null,
-        paymentMethod: 'card'
-      };
 
       // Redirect to Confirmation
       window.location.hash = `#/booking/confirmed`;
     }, 2500);
   };
-
-  // Initial load
-  renderFoodTab(activeFoodTab);
   loadPaymentForm(current.paymentMethod);
 }
 
@@ -2874,7 +2656,7 @@ function renderConfirmed(container) {
           <div class="success-check-icon">
             <i class="fa-solid fa-check"></i>
           </div>
-          <h2 class="gold-gradient-text" style="font-size:2.2rem; margin-bottom:0.5rem;">🎉 Booking Confirmed!</h2>
+          <h2 class="gold-gradient-text" style="font-size:2.2rem; margin-bottom:0.5rem;">🎉 Congratulations! Your payment is done & your room is booked</h2>
           <p style="color:var(--color-ivory);">Sit back, relax, and let us take care of the rest. Your perfect stay awaits!</p>
         </div>
 
