@@ -1410,10 +1410,6 @@ function renderBookingWizard(step) {
           <div class="step-number">${step > 4 ? '<i class="fa-solid fa-check"></i>' : '4'}</div>
           <span class="step-label">Documents</span>
         </div>
-        <div class="wizard-step-node ${step === 5 ? 'active' : '5'}">
-          <div class="step-number">5</div>
-          <span class="step-label">Payment & F&B</span>
-        </div>
       </div>
     </header>
 
@@ -2013,217 +2009,30 @@ function renderStep3(canvas) {
   const p = current.guestInfo.primary;
   const pName = p.name || '';
   const pAge = p.age || '';
-  const pGender = p.gender || 'Male';
-  const pMobile = p.mobile || '';
-  const pEmail = p.email || '';
-  const pNation = p.nationality || 'Indian';
-  const pPurpose = p.purpose || 'pilgrimage';
-  const pStreet = p.street || '';
-  const pCity = p.city || '';
-  const pState = p.state || '';
-  const pPin = p.pin || '';
-
-  // Standard room allows up to maxGuests. The form allows inputting details for exactly that number of guests if they select.
-  // We dynamically generate accordion forms for "Additional Guests". 
-  // How many additional guest forms? current.guestsCount - 1 (since primary guest takes the first).
-  const addCount = Math.max(current.guestsCount - 1, 0);
-
-  let additionalGuestHTML = '';
-  for (let i = 1; i <= addCount; i++) {
-    const addGuestVal = current.guestInfo.additional[i - 1] || {};
-    const addName = addGuestVal.name || '';
-    const addAge = addGuestVal.age || '';
-    const addGender = addGuestVal.gender || 'Male';
-    const addRelation = addGuestVal.relation || 'Spouse';
-
-    additionalGuestHTML += `
-      <div class="guest-accordion">
-        <div class="accordion-header" id="acc-header-${i}">
-          <h4><i class="fa-solid fa-user-plus gold-color"></i> Additional Guest ${i} Details</h4>
-          <i class="fa-solid fa-chevron-down" id="acc-chevron-${i}"></i>
-        </div>
-        <div class="accordion-content" id="acc-content-${i}">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="add-name-${i}">Full Name *</label>
-              <input type="text" id="add-name-${i}" class="validate-alphabet" placeholder="As in official ID card" value="${addName}" required>
-            </div>
-            <div class="form-group">
-              <label for="add-age-${i}">Age *</label>
-              <input type="number" id="add-age-${i}" min="1" max="100" placeholder="e.g. 28" value="${addAge}" required>
-            </div>
-            <div class="form-group">
-              <label>Gender *</label>
-              <div class="radio-pill-group">
-                <label class="radio-pill">
-                  <input type="radio" name="add-gender-${i}" value="Male" ${addGender === 'Male' ? 'checked' : ''}>
-                  <span class="radio-pill-lbl">Male</span>
-                </label>
-                <label class="radio-pill">
-                  <input type="radio" name="add-gender-${i}" value="Female" ${addGender === 'Female' ? 'checked' : ''}>
-                  <span class="radio-pill-lbl">Female</span>
-                </label>
-                <label class="radio-pill">
-                  <input type="radio" name="add-gender-${i}" value="Other" ${addGender === 'Other' ? 'checked' : ''}>
-                  <span class="radio-pill-lbl">Other</span>
-                </label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="add-relation-${i}">Relation to Primary Guest *</label>
-              <select id="add-relation-${i}">
-                <option value="Spouse" ${addRelation === 'Spouse' ? 'selected' : ''}>Spouse</option>
-                <option value="Parent" ${addRelation === 'Parent' ? 'selected' : ''}>Parent</option>
-                <option value="Child" ${addRelation === 'Child' ? 'selected' : ''}>Child</option>
-                <option value="Friend" ${addRelation === 'Friend' ? 'selected' : ''}>Friend</option>
-                <option value="Colleague" ${addRelation === 'Colleague' ? 'selected' : ''}>Colleague</option>
-                <option value="Other" ${addRelation === 'Other' ? 'selected' : ''}>Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+  const pAddress = p.address || '';
 
   canvas.innerHTML = `
-    <h3 class="wizard-step-title">Tell Us About Your Stay — Guest Information</h3>
-    <p class="wizard-step-subtitle">Please fill out mandatory fields to verify check-in profile rules.</p>
+    <h3 class="wizard-step-title">Guest Details</h3>
+    <p class="wizard-step-subtitle">Please enter your basic information to proceed with the reservation.</p>
 
     <form id="step-guest-details-form" onsubmit="return false;">
       <div class="form-section-title">Primary Guest Details</div>
       
       <div class="form-grid">
         <div class="form-group">
-          <label for="pri-name">Full Name * (Alphabets only)</label>
+          <label for="pri-name">Full Name * (Letters and spaces only)</label>
           <input type="text" id="pri-name" class="validate-alphabet" placeholder="e.g. Rajesh Kumar" value="${pName}" required>
         </div>
         <div class="form-group">
           <label for="pri-age">Age * (1-100)</label>
           <input type="number" id="pri-age" min="1" max="100" placeholder="e.g. 35" value="${pAge}" required>
         </div>
-        
-        <div class="form-group">
-          <label>Gender *</label>
-          <div class="radio-pill-group">
-            <label class="radio-pill">
-              <input type="radio" name="pri-gender" value="Male" ${pGender === 'Male' ? 'checked' : ''}>
-              <span class="radio-pill-lbl">Male</span>
-            </label>
-            <label class="radio-pill">
-              <input type="radio" name="pri-gender" value="Female" ${pGender === 'Female' ? 'checked' : ''}>
-              <span class="radio-pill-lbl">Female</span>
-            </label>
-            <label class="radio-pill">
-              <input type="radio" name="pri-gender" value="Other" ${pGender === 'Other' ? 'checked' : ''}>
-              <span class="radio-pill-lbl">Other</span>
-            </label>
-            <label class="radio-pill">
-              <input type="radio" name="pri-gender" value="Prefer Not" ${pGender === 'Prefer Not' ? 'checked' : ''}>
-              <span class="radio-pill-lbl">Prefer Not</span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="pri-nation">Nationality *</label>
-          <select id="pri-nation">
-            <option value="Indian" ${pNation === 'Indian' ? 'selected' : ''}>Indian</option>
-            <option value="NRI" ${pNation === 'NRI' ? 'selected' : ''}>NRI (Non-Resident Indian)</option>
-            <option value="Foreigner" ${pNation === 'Foreigner' ? 'selected' : ''}>Foreign National</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="pri-mobile">Mobile Number (Indian format)</label>
-          <input type="tel" id="pri-mobile" placeholder="+91 XXXXX XXXXX" value="${pMobile}">
-        </div>
-        <div class="form-group">
-          <label for="pri-email">Email Address</label>
-          <input type="email" id="pri-email" placeholder="rajesh@example.com" value="${pEmail}">
-        </div>
       </div>
 
-      <div class="form-section-title">Check-in Purpose *</div>
-      <div class="purpose-grid">
-        <label class="purpose-card">
-          <input type="radio" name="purpose" value="pilgrimage" ${pPurpose === 'pilgrimage' ? 'checked' : ''}>
-          <span class="purpose-card-lbl">
-            <i class="fa-solid fa-gopuram"></i>
-            <span>Pilgrimage / Temple</span>
-          </span>
-        </label>
-        
-        <label class="purpose-card">
-          <input type="radio" name="purpose" value="tourism" ${pPurpose === 'tourism' ? 'checked' : ''}>
-          <span class="purpose-card-lbl">
-            <i class="fa-solid fa-route"></i>
-            <span>Tourism / Sightseeing</span>
-          </span>
-        </label>
-
-        <label class="purpose-card">
-          <input type="radio" name="purpose" value="business" ${pPurpose === 'business' ? 'checked' : ''}>
-          <span class="purpose-card-lbl">
-            <i class="fa-solid fa-briefcase"></i>
-            <span>Business Travel</span>
-          </span>
-        </label>
-        
-        <label class="purpose-card">
-          <input type="radio" name="purpose" value="family" ${pPurpose === 'family' ? 'checked' : ''}>
-          <span class="purpose-card-lbl">
-            <i class="fa-solid fa-people-roof"></i>
-            <span>Family Visit</span>
-          </span>
-        </label>
-
-        <label class="purpose-card">
-          <input type="radio" name="purpose" value="education" ${pPurpose === 'education' ? 'checked' : ''}>
-          <span class="purpose-card-lbl">
-            <i class="fa-solid fa-graduation-cap"></i>
-            <span>Conference / Seminar</span>
-          </span>
-        </label>
-        
-        <label class="purpose-card">
-          <input type="radio" name="purpose" value="medical" ${pPurpose === 'medical' ? 'checked' : ''}>
-          <span class="purpose-card-lbl">
-            <i class="fa-solid fa-house-medical"></i>
-            <span>Medical Travel</span>
-          </span>
-        </label>
-      </div>
-
-      <div class="form-section-title">Home Address</div>
-      <div class="form-grid">
-        <div class="form-group full-width">
-          <label for="pri-street">Street Address *</label>
-          <input type="text" id="pri-street" placeholder="Flat No, Building Name, Street" value="${pStreet}" required>
-        </div>
-        <div class="form-group">
-          <label for="pri-city">City *</label>
-          <input type="text" id="pri-city" placeholder="e.g. Bangalore" value="${pCity}" required>
-        </div>
-        <div class="form-group">
-          <label for="pri-state">State *</label>
-          <input type="text" id="pri-state" placeholder="e.g. Karnataka" value="${pState}" required>
-        </div>
-        <div class="form-group">
-          <label for="pri-pin">PIN Code *</label>
-          <input type="text" id="pri-pin" placeholder="6-digit PIN" value="${pPin}" required>
-        </div>
-      </div>
-
-      <!-- Additional Guest accordions -->
-      ${addCount > 0 ? `
-        <div class="form-section-title">Co-travelers details</div>
-        ${additionalGuestHTML}
-      ` : ''}
-
-      <div class="form-section-title">Special Requests (Optional)</div>
-      <div class="form-group full-width">
-        <textarea id="special-requests" rows="3" maxlength="500" placeholder="e.g. Ground floor room preferred | Wheelchair access needed | Extra pillows">${current.guestInfo.specialRequests}</textarea>
+      <div class="form-section-title">Address *</div>
+      <div class="form-group full-width" style="margin-top: 0.5rem;">
+        <label for="pri-address">Complete Address *</label>
+        <textarea id="pri-address" rows="3" placeholder="Flat No, Building, Street, City, State, PIN Code" required>${pAddress}</textarea>
       </div>
 
       <!-- Wizard Navigation Footer -->
@@ -2245,75 +2054,28 @@ function renderStep3(canvas) {
     };
   });
 
-  // Mobile prefix autocomplete Binds
-  const mobileInput = document.getElementById('pri-mobile');
-  mobileInput.onfocus = () => {
-    if (!mobileInput.value.startsWith('+91')) {
-      mobileInput.value = '+91 ';
-    }
-  };
-
-  // Accordion header toggler Binds
-  for (let i = 1; i <= addCount; i++) {
-    const header = document.getElementById(`acc-header-${i}`);
-    const content = document.getElementById(`acc-content-${i}`);
-    const chevron = document.getElementById(`acc-chevron-${i}`);
-    
-    // Default collapse all except the first additional guest
-    if (i > 1) {
-      content.classList.add('collapsed');
-      chevron.className = 'fa-solid fa-chevron-right';
-    }
-
-    header.onclick = () => {
-      if (content.classList.contains('collapsed')) {
-        content.classList.remove('collapsed');
-        chevron.className = 'fa-solid fa-chevron-down';
-      } else {
-        content.classList.add('collapsed');
-        chevron.className = 'fa-solid fa-chevron-right';
-      }
-    };
-  }
-
   // Submit/Validate Binds
   const form = document.getElementById('step-guest-details-form');
   form.onsubmit = () => {
-    // Validate Primary Mobile (only if entered)
-    const rawMob = mobileInput.value.replace('+91', '').trim();
-    if (rawMob && (rawMob.length !== 10 || isNaN(rawMob))) {
-      alert("Please enter a valid 10-digit Indian mobile number.");
-      mobileInput.focus();
-      return;
-    }
-
     // Save Primary Details to State
     current.guestInfo.primary = {
-      name: document.getElementById('pri-name').value,
+      name: document.getElementById('pri-name').value.trim(),
       age: parseInt(document.getElementById('pri-age').value) || 0,
-      gender: document.querySelector('input[name="pri-gender"]:checked') ? document.querySelector('input[name="pri-gender"]:checked').value : 'Male',
-      nationality: document.getElementById('pri-nation').value,
-      mobile: rawMob ? mobileInput.value : '',
-      email: document.getElementById('pri-email').value || '',
-      purpose: document.querySelector('input[name="purpose"]:checked').value,
-      street: document.getElementById('pri-street').value,
-      city: document.getElementById('pri-city').value,
-      state: document.getElementById('pri-state').value,
-      pin: document.getElementById('pri-pin').value
+      address: document.getElementById('pri-address').value.trim(),
+      gender: 'Male',
+      nationality: 'Indian',
+      mobile: 'N/A',
+      email: 'N/A',
+      purpose: 'pilgrimage',
+      street: document.getElementById('pri-address').value.trim(),
+      city: '',
+      state: '',
+      pin: ''
     };
 
-    // Save Additional Guests
+    // Save Additional Guests (empty since we enter only primary details now)
     current.guestInfo.additional = [];
-    for (let i = 1; i <= addCount; i++) {
-      current.guestInfo.additional.push({
-        name: document.getElementById(`add-name-${i}`).value,
-        age: parseInt(document.getElementById(`add-age-${i}`).value),
-        gender: document.querySelector(`input[name="add-gender-${i}"]:checked`).value,
-        relation: document.getElementById(`add-relation-${i}`).value
-      });
-    }
-
-    current.guestInfo.specialRequests = document.getElementById('special-requests').value;
+    current.guestInfo.specialRequests = '';
 
     // Proceed to Step 4
     window.location.hash = `#/booking/step-4`;
@@ -2414,7 +2176,7 @@ function renderStep4(canvas) {
     <!-- Wizard Navigation Footer -->
     <div class="wizard-footer">
       <button class="btn-wizard-nav prev" onclick="window.location.hash='#/booking/step-3'"><i class="fa-solid fa-arrow-left"></i> Back</button>
-      <button class="btn-wizard-nav next" id="btn-wizard-next" disabled>Continue to Payment <i class="fa-solid fa-arrow-right"></i></button>
+      <button class="btn-wizard-nav next" id="btn-wizard-next" disabled>Next <i class="fa-solid fa-arrow-right"></i></button>
     </div>
   `;
 
@@ -2526,7 +2288,132 @@ function renderStep4(canvas) {
   }
 
   nextBtn.onclick = () => {
-    window.location.hash = `#/booking/step-5`;
+    // Show loading booking spinner
+    nextBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Confirming Booking...`;
+    nextBtn.disabled = true;
+
+    const mobBtn = document.getElementById('mobile-fixed-cta-btn');
+    if (mobBtn) {
+      mobBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+      mobBtn.disabled = true;
+    }
+
+    setTimeout(() => {
+      // 1. Generate booking ID
+      const randomDigits = Math.floor(100000 + Math.random() * 900000);
+      const bookingId = `RBC-2025-${randomDigits}`;
+      
+      const checkinDate = current.checkIn;
+      const checkoutDate = current.checkOut;
+      const is12Hours = parseInt(current.durationHours) === 12;
+      const displayDuration = is12Hours ? '12 Hours' : '24 Hours';
+      
+      // Calculate final payable total amount for database sync
+      const baseCost = is12Hours ? Math.max(room.price - 300, 200) : room.price;
+      const extraBedRate = room.ac ? 500 : 350;
+      const extraBedCost = current.extraBeds * extraBedRate;
+      
+      let addonsCost = 0;
+      current.addons.forEach(ad => { addonsCost += ad.price; });
+
+      let subtotal = baseCost + extraBedCost + addonsCost;
+      
+      // Apply 18% GST
+      const totalAmount = Math.round(subtotal + (subtotal * 0.18));
+
+      // 2. Write details to GLOBAL state database
+      // Update room status
+      const targetRoom = window.RubicornState.rooms.find(r => r.id === room.id);
+      if (targetRoom) {
+        targetRoom.status = 'occupied';
+        targetRoom.currentGuest = {
+          name: current.guestInfo.primary.name,
+          bookingId: bookingId,
+          checkIn: checkinDate,
+          checkOut: checkoutDate,
+          guestsCount: current.guestsCount,
+          extraBeds: current.extraBeds,
+          duration: displayDuration
+        };
+        targetRoom.checkIn = checkinDate;
+        targetRoom.checkOut = checkoutDate;
+      }
+
+      // Add Booking Entry
+      const bookingEntry = {
+        bookingId: bookingId,
+        roomId: room.id,
+        roomType: room.type,
+        floor: room.floor,
+        guestName: current.guestInfo.primary.name,
+        guestAge: current.guestInfo.primary.age,
+        guestAddress: current.guestInfo.primary.address,
+        checkIn: checkinDate,
+        checkOut: checkoutDate,
+        nights: displayDuration,
+        guests: current.guestsCount,
+        extras: current.extraBeds > 0 ? `${current.extraBeds} Extra Rollaway Bed(s)` : 'None',
+        food: 'None',
+        totalAmount: totalAmount,
+        status: 'confirmed',
+        bookingDate: getFormattedDate(0)
+      };
+      
+      window.RubicornState.bookings.push(bookingEntry);
+
+      // Add Guest registry profile entry
+      window.RubicornState.guests.push({
+        id: `GST-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: current.guestInfo.primary.name,
+        age: current.guestInfo.primary.age,
+        address: current.guestInfo.primary.address,
+        mobile: 'N/A',
+        email: 'N/A',
+        lastStay: checkinDate,
+        totalVisits: 1,
+        totalSpent: totalAmount,
+        documents: current.document.type
+      });
+
+      // Persist State
+      saveStateToStorage();
+
+      // Clear wizard parameters for the confirmation ticket
+      window.RubicornState.lastConfirmedBooking = {
+        bookingId: bookingId,
+        guestName: current.guestInfo.primary.name,
+        email: 'N/A',
+        roomNo: room.id,
+        roomName: room.type,
+        floor: room.floor,
+        checkIn: checkinDate,
+        checkOut: checkoutDate,
+        nights: displayDuration,
+        guests: current.guestsCount,
+        extras: current.extraBeds > 0 ? `${current.extraBeds} Extra Bed` : 'None',
+        amount: totalAmount
+      };
+
+      // Reset Current Booking state parameters
+      window.RubicornState.currentBooking = {
+        checkIn: '',
+        checkOut: '',
+        durationHours: 24,
+        guestsCount: 1,
+        roomType: 'All',
+        roomId: null,
+        extraBeds: 0,
+        addons: [],
+        guestInfo: { primary: {}, additional: [], specialRequests: '' },
+        document: { type: 'Aadhaar', uploads: [] },
+        food: [],
+        coupon: null,
+        paymentMethod: 'card'
+      };
+
+      // Redirect to Confirmation
+      window.location.hash = `#/booking/confirmed`;
+    }, 1500);
   };
 
   // Initial load
@@ -3804,7 +3691,12 @@ function renderDashboardBookings(workspace) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-family:monospace; font-weight:700; color:var(--color-gold);">${b.bookingId}</td>
-        <td><strong>${b.guestName}</strong></td>
+        <td>
+          <strong>${b.guestName}</strong>
+          <div style="font-size:0.75rem; color:var(--color-ivory-dim); margin-top: 2px;">
+            Age: ${b.guestAge || 'N/A'} | Addr: ${b.guestAddress || 'N/A'}
+          </div>
+        </td>
         <td>Room ${b.roomId} (${b.floor})</td>
         <td style="font-size:0.8rem;">
           ${b.checkIn} to ${b.checkOut}
@@ -3868,9 +3760,14 @@ function renderDashboardGuests(workspace) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-family:monospace; font-weight:700; color:var(--color-gold);">${g.id}</td>
-      <td><strong>${g.name}</strong></td>
-      <td>${g.mobile}</td>
-      <td>${g.email}</td>
+      <td>
+        <strong>${g.name}</strong>
+        <div style="font-size:0.75rem; color:var(--color-ivory-dim); margin-top: 2px;">
+          Age: ${g.age || 'N/A'} | Addr: ${g.address || 'N/A'}
+        </div>
+      </td>
+      <td>${g.mobile || 'N/A'}</td>
+      <td>${g.email || 'N/A'}</td>
       <td><span class="status-pill confirmed" style="font-size:0.7rem;">Verified ${g.documents}</span></td>
       <td style="font-size:0.8rem;">${g.lastStay}</td>
       <td style="text-align:center;">${g.totalVisits}</td>
