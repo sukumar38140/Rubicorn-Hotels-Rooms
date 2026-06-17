@@ -2665,8 +2665,8 @@ function renderConfirmed(container) {
           <div class="success-check-icon">
             <i class="fa-solid fa-check"></i>
           </div>
-          <h2 class="gold-gradient-text" style="font-size:2.2rem; margin-bottom:0.5rem;">🎉 Congratulations! Your payment is done & your room is booked</h2>
-          <p style="color:var(--color-ivory);">Sit back, relax, and let us take care of the rest. Your perfect stay awaits!</p>
+          <h2 class="green-success-text" style="font-size:2.2rem; margin-bottom:0.5rem;">🎉 Congratulations! Your payment is done & your room is booked</h2>
+          <p style="color:#FAF7F2; opacity:0.95;">Sit back, relax, and let us take care of the rest. Your perfect stay awaits!</p>
         </div>
 
         <!-- Ticket voucher -->

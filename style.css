@@ -404,6 +404,15 @@ img {
   font-weight: 700;
 }
 
+.green-success-text {
+  background: linear-gradient(to right, #a7f3d0 0%, #34d399 50%, #a7f3d0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 12px rgba(52, 211, 153, 0.25);
+  font-weight: 700;
+}
+
 .gold-color {
   color: var(--color-gold);
 }
@@ -2728,34 +2737,34 @@ img {
   max-width: 750px;
   margin: 0 auto;
   background: var(--color-card-bg);
-  border: 1px solid var(--color-gold);
+  border: 1px solid #10b981;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card), var(--shadow-gold);
+  box-shadow: var(--shadow-card), 0 8px 30px rgba(16, 185, 129, 0.12);
   overflow: hidden;
   position: relative;
   animation: fade-in-up 0.5s ease-out;
 }
 
 .confirm-header-decor {
-  background: linear-gradient(135deg, var(--color-burgundy-dark) 0%, var(--color-burgundy) 50%, var(--color-burgundy-dark) 100%);
+  background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #064e3b 100%);
   padding: 3rem 2rem;
   text-align: center;
-  border-bottom: 1px solid var(--color-gold);
+  border-bottom: 1px solid #059669;
 }
 
 .success-check-icon {
   width: 72px;
   height: 72px;
   border-radius: var(--radius-round);
-  border: 3px solid var(--color-gold);
+  border: 3px solid #10b981;
   background: var(--color-charcoal);
-  color: var(--color-gold);
+  color: #10b981;
   font-size: 2.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
-  box-shadow: 0 0 20px rgba(201, 168, 76, 0.4);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
   animation: scale-up-elastic 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
