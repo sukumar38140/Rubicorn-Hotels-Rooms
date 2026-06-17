@@ -775,9 +775,9 @@ img {
 .floor-row-trigger {
   width: 100%;
   height: 16%;
-  background: rgba(230, 220, 200, 0.15); /* Soft light tint */
-  border-top: 1px solid rgba(201, 168, 76, 0.15);
-  border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+  background: transparent; /* Transparent by default */
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
   display: flex;
   align-items: center;
   justify-content: flex-end; /* Align badges to the right side of the image */
@@ -788,14 +788,19 @@ img {
 }
 
 .floor-row-trigger:hover {
-  background: rgba(122, 31, 29, 0.12); /* Soft maroon overlay */
+  background: rgba(122, 31, 29, 0.18); /* Red/maroon highlight visible on hover */
   border-color: var(--color-gold);
 }
 
 .floor-row-trigger.active {
-  background: rgba(122, 31, 29, 0.22); /* Darker active maroon overlay */
-  border-color: var(--color-gold);
-  box-shadow: inset 0 0 15px rgba(201, 168, 76, 0.25);
+  background: transparent; /* Remove red backdrop overlay by default */
+  border-top: 1px solid var(--color-gold); /* Keep gold borders to define selected floor */
+  border-bottom: 1px solid var(--color-gold);
+  box-shadow: none;
+}
+
+.floor-row-trigger.active:hover {
+  background: rgba(122, 31, 29, 0.18);
 }
 
 .floor-name-lbl {
