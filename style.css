@@ -3780,6 +3780,14 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
     margin-bottom: 60px; /* offset sticky bottom cta */
   }
 
+  .floor-details-info {
+    padding: 1.5rem !important;
+  }
+  .floor-stat-pills {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
   /* Footer responsive */
   .footer-container {
     grid-template-columns: 1fr;
@@ -3788,6 +3796,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   }
   .footer-logo {
     justify-content: center;
+    font-size: clamp(1.1rem, 5.5vw, 1.4rem) !important;
+    flex-wrap: wrap;
   }
   .footer-description {
     margin: 0 auto;
@@ -3853,6 +3863,32 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   
   .pay-methods-tabs {
     flex-direction: column;
+  }
+
+  /* Wizard & Voucher Mobile Scaling */
+  .wizard-header {
+    padding: 1rem 0.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .wizard-steps::before {
+    top: 16px !important;
+    left: 15px !important;
+    right: 15px !important;
+  }
+  .step-number {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.85rem !important;
+  }
+  .step-label {
+    display: none !important; /* Hide labels to avoid horizontal layout breaking */
+  }
+  .voucher-ticket-body {
+    padding: 1.25rem !important;
+  }
+  .voucher-details-grid {
+    padding: 1rem !important;
+    gap: 0.75rem !important;
   }
 }
 
