@@ -464,6 +464,22 @@ function renderLanding(container) {
       </div>
     </section>
 
+    <!-- Featured Rooms Carousel -->
+    <section class="section-padding" style="background: rgba(26, 26, 46, 0.3); border-y: 1px solid var(--color-card-border);">
+      <div class="container">
+        <div class="section-title-wrapper">
+          <span class="section-subtitle">Exquisite Discoveries</span>
+          <h2 class="section-title">Our Featured Suites</h2>
+        </div>
+        
+        <div class="carousel-outer">
+          <button class="carousel-nav-btn carousel-prev" id="car-prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
+          <div class="carousel-track" id="featured-carousel-track"></div>
+          <button class="carousel-nav-btn carousel-next" id="car-next-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </section>
+
     <!-- Why Rubicorn Strip -->
     <section class="section-padding container" id="why-rubicorn-section">
       <div class="section-title-wrapper">
@@ -490,22 +506,6 @@ function renderLanding(container) {
           <span class="feature-icon">🔐</span>
           <h3>Secure Booking</h3>
           <p>Instant booking confirmations with digital ID audits. Fully secure payment options.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Featured Rooms Carousel -->
-    <section class="section-padding" style="background: rgba(26, 26, 46, 0.3); border-y: 1px solid var(--color-card-border);">
-      <div class="container">
-        <div class="section-title-wrapper">
-          <span class="section-subtitle">Exquisite Discoveries</span>
-          <h2 class="section-title">Our Featured Suites</h2>
-        </div>
-        
-        <div class="carousel-outer">
-          <button class="carousel-nav-btn carousel-prev" id="car-prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
-          <div class="carousel-track" id="featured-carousel-track"></div>
-          <button class="carousel-nav-btn carousel-next" id="car-next-btn"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
       </div>
     </section>
