@@ -374,8 +374,7 @@ const generatedImageCache = {};
 function mountGeminiImage(container, imageKey, altText, customClass = '') {
   container.className = `shimmer-container ${container.className || ''}`;
   
-  const currentPos = window.getComputedStyle ? window.getComputedStyle(container).position : 'static';
-  if (currentPos !== 'absolute' && currentPos !== 'relative' && currentPos !== 'fixed') {
+  if (!container.classList.contains('hero-bg-container')) {
     container.style.position = 'relative';
   }
   
