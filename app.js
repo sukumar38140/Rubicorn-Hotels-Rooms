@@ -147,7 +147,8 @@ window.RubicornState = {
     coupon: null,
     paymentMethod: 'card'
   },
-  adminLoggedIn: false
+  adminLoggedIn: false,
+  userRole: null
 };
 
 // State persistence
@@ -160,6 +161,7 @@ function loadStateFromStorage() {
       window.RubicornState.bookings = parsed.bookings || [];
       window.RubicornState.guests = parsed.guests || [];
       window.RubicornState.adminLoggedIn = parsed.adminLoggedIn || false;
+      window.RubicornState.userRole = parsed.userRole || null;
       if (parsed.currentBooking) {
         window.RubicornState.currentBooking = parsed.currentBooking;
       }
@@ -183,6 +185,7 @@ function saveStateToStorage() {
     bookings: window.RubicornState.bookings,
     guests: window.RubicornState.guests,
     adminLoggedIn: window.RubicornState.adminLoggedIn,
+    userRole: window.RubicornState.userRole,
     currentBooking: window.RubicornState.currentBooking
   }));
 }
@@ -192,6 +195,7 @@ function resetStateStore() {
   window.RubicornState.bookings = [];
   window.RubicornState.guests = [];
   window.RubicornState.adminLoggedIn = false;
+  window.RubicornState.userRole = null;
   window.RubicornState.currentBooking = {
     checkIn: '',
     checkOut: '',
@@ -369,7 +373,11 @@ const generatedImageCache = {};
 
 function mountGeminiImage(container, imageKey, altText, customClass = '') {
   container.className = `shimmer-container ${container.className || ''}`;
-  container.style.position = 'relative';
+  
+  const currentPos = window.getComputedStyle ? window.getComputedStyle(container).position : 'static';
+  if (currentPos !== 'absolute' && currentPos !== 'relative' && currentPos !== 'fixed') {
+    container.style.position = 'relative';
+  }
   
   const imgElement = document.createElement('img');
   imgElement.className = `${customClass} loading`;
@@ -2866,9 +2874,11 @@ function renderAdminLogin(container) {
         <button type="submit" class="btn-book-now" style="width:100%; padding:0.85rem;">Secure Log-in</button>
       </form>
       
-      <p style="font-size:0.75rem; color:var(--color-ivory-dim); margin-top:2rem;">
-        <i class="fa-solid fa-triangle-exclamation gold-color"></i> Access audited strictly. Authorised credentials seeded for demo review.
-      </p>
+      <div style="font-size:0.75rem; color:var(--color-ivory-dim); margin-top:2rem; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-card-border);">
+        <div style="font-weight: 700; color: var(--color-gold); margin-bottom: 0.25rem;"><i class="fa-solid fa-circle-info"></i> Seeded Review Credentials:</div>
+        • <strong>Admin (Observer)</strong>: <span style="font-family: monospace;">admin@rubicorn.com</span> / <span style="font-family: monospace;">Rubicorn@2025</span><br>
+        • <strong>Manager (Operator)</strong>: <span style="font-family: monospace;">manager@rubicorn.com</span> / <span style="font-family: monospace;">Manager@2025</span>
+      </div>
     </div>
   `;
 
@@ -2878,15 +2888,26 @@ function renderAdminLogin(container) {
     
     if (email === 'admin@rubicorn.com' && pass === 'Rubicorn@2025') {
       window.RubicornState.adminLoggedIn = true;
+      window.RubicornState.userRole = 'admin';
       saveStateToStorage();
       
       // Notify active header
       updateNavActiveLinks('/admin/dashboard');
       
-      showToast('Welcome, Administrator!', 'success');
+      showToast('Welcome, Administrator (Observer Mode)', 'success');
+      window.location.hash = '#/admin/dashboard';
+    } else if (email === 'manager@rubicorn.com' && pass === 'Manager@2025') {
+      window.RubicornState.adminLoggedIn = true;
+      window.RubicornState.userRole = 'manager';
+      saveStateToStorage();
+      
+      // Notify active header
+      updateNavActiveLinks('/admin/dashboard');
+      
+      showToast('Welcome, Manager/Receptionist (Operator Mode)', 'success');
       window.location.hash = '#/admin/dashboard';
     } else {
-      alert("Invalid login credentials. In demo mode use: admin@rubicorn.com / Rubicorn@2025");
+      alert("Invalid login credentials.\n\nUse review options:\n- admin@rubicorn.com / Rubicorn@2025\n- manager@rubicorn.com / Manager@2025");
     }
   };
 }
@@ -2900,13 +2921,17 @@ function renderAdminDashboard(subview) {
   mainDiv.className = 'admin-layout-wrapper fade-in-up-anim';
   container.appendChild(mainDiv);
 
+  const userRole = window.RubicornState.userRole || 'manager';
+  const roleTitle = userRole === 'admin' ? 'Administrator' : 'Manager / Receptionist';
+  const roleBadge = userRole === 'admin' ? 'Observer' : 'Desk Operator';
+
   mainDiv.innerHTML = `
     <!-- Sidebar -->
     <aside class="admin-sidebar">
-      <div style="text-align:center; padding-bottom:1rem; border-bottom:1px solid var(--color-card-border);">
-        <i class="fa-solid fa-crown gold-color" style="font-size:2rem; margin-bottom:0.5rem;"></i>
-        <h4 style="font-family:var(--font-sans); font-size:1rem;">Rubicorn Console</h4>
-        <span style="font-size:0.7rem; color:var(--color-gold); font-weight:700; text-transform:uppercase;">Desk Operator</span>
+      <div class="admin-sidebar-header" style="text-align:center; padding-bottom:1rem; border-bottom:1px solid var(--color-card-border); width: 100%;">
+        <i class="fa-solid fa-crown gold-color" style="font-size:2.0rem; margin-bottom:0.5rem;"></i>
+        <h4 style="font-family:var(--font-sans); font-size:1rem; margin:0.25rem 0;">${roleTitle}</h4>
+        <span style="font-size:0.7rem; color:var(--color-gold); font-weight:700; text-transform:uppercase;">${roleBadge}</span>
       </div>
 
       <nav class="admin-sidebar-menu">
@@ -3290,6 +3315,9 @@ function openAdminActionModal(room) {
     `;
   }
 
+  const isAdmin = window.RubicornState.userRole === 'admin';
+  const disabledAttr = isAdmin ? 'disabled style="opacity:0.55; cursor:not-allowed;"' : '';
+
   const modalBox = document.createElement('div');
   modalBox.className = 'modal-card';
   modalBox.innerHTML = `
@@ -3298,9 +3326,16 @@ function openAdminActionModal(room) {
       <button class="modal-close-btn" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
     
-    <div style="font-size:0.85rem; color:var(--color-ivory-dim); margin-bottom:1.5rem;">
+    <div style="font-size:0.85rem; color:var(--color-ivory-dim); margin-bottom:1rem;">
       <strong>Category Class:</strong> ${room.type} (${room.floor} Level)
     </div>
+
+    ${isAdmin ? `
+      <div class="alert-warning" style="margin-bottom: 1.25rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span><strong>Observer Mode:</strong> Room action controls are disabled. Log in as a Manager/Receptionist to execute room status changes.</span>
+      </div>
+    ` : ''}
 
     <div class="checkbox-group" style="gap:1rem; border:1px solid var(--color-card-border); padding:1.25rem; border-radius:8px; background:var(--color-charcoal);">
       ${descHTML}
@@ -3308,15 +3343,15 @@ function openAdminActionModal(room) {
 
     <div class="modal-action-row">
       ${room.status === 'occupied' ? `
-        <button class="btn-modal primary" id="btn-admin-checkout">Mark Check-Out</button>
+        <button class="btn-modal primary" id="btn-admin-checkout" ${disabledAttr}>Mark Check-Out</button>
       ` : ''}
       
       ${room.status === 'available' ? `
-        <button class="btn-modal primary" id="btn-admin-block" style="background:#d97706; border-color:#d97706;">Block Room</button>
+        <button class="btn-modal primary" id="btn-admin-block" style="background:#d97706; border-color:#d97706; ${isAdmin ? 'opacity:0.55; cursor:not-allowed;' : ''}" ${disabledAttr}>Block Room</button>
       ` : ''}
 
       ${room.status === 'maintenance' ? `
-        <button class="btn-modal primary" id="btn-admin-unblock">Unblock (Make Avail)</button>
+        <button class="btn-modal primary" id="btn-admin-unblock" ${disabledAttr}>Unblock (Make Avail)</button>
       ` : ''}
       
       <button class="btn-modal secondary" id="btn-cancel-modal">Cancel Action</button>
@@ -3330,7 +3365,7 @@ function openAdminActionModal(room) {
   document.getElementById('btn-cancel-modal').onclick = closeModal;
 
   // Actions Binds
-  if (room.status === 'occupied') {
+  if (room.status === 'occupied' && !isAdmin) {
     document.getElementById('btn-admin-checkout').onclick = () => {
       if (confirm(`Confirm checkout processing for ${room.currentGuest.name}?`)) {
         // Change room back to available
@@ -3350,7 +3385,7 @@ function openAdminActionModal(room) {
     };
   }
 
-  if (room.status === 'available') {
+  if (room.status === 'available' && !isAdmin) {
     document.getElementById('btn-admin-block').onclick = () => {
       if (confirm(`Block room ${room.id} for maintenance scheduling?`)) {
         const stateRoom = window.RubicornState.rooms.find(r => r.id === room.id);
@@ -3365,7 +3400,7 @@ function openAdminActionModal(room) {
     };
   }
 
-  if (room.status === 'maintenance') {
+  if (room.status === 'maintenance' && !isAdmin) {
     document.getElementById('btn-admin-unblock').onclick = () => {
       const stateRoom = window.RubicornState.rooms.find(r => r.id === room.id);
       stateRoom.status = 'available';
