@@ -492,7 +492,6 @@ img {
   margin-bottom: 0.5rem;
   display: block;
   animation: fade-in-up 0.8s ease-out forwards;
-  text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff; /* White fog glow behind letters */
 }
 
 .hero-title {
@@ -502,7 +501,6 @@ img {
   margin-bottom: 1rem;
   font-family: var(--font-serif);
   animation: fade-in-up 1s ease-out forwards;
-  filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px rgba(255, 255, 255, 0.9)); /* Halo glow on gradient text */
 }
 
 .mobile-hero-image-wrap {
@@ -516,7 +514,6 @@ img {
   color: #b8860b; /* Richer, brighter gold for contrast */
   margin-bottom: 1.25rem;
   animation: fade-in-up 1.1s ease-out forwards;
-  text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff; /* White fog glow behind letters */
 }
 
 .hero-desc {
@@ -525,7 +522,6 @@ img {
   max-width: 650px;
   margin: 0 auto 2.5rem;
   animation: fade-in-up 1.2s ease-out forwards;
-  text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff; /* White fog glow behind letters */
 }
 
 /* Floating Quick Search Widget */
