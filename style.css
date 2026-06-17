@@ -3550,6 +3550,71 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   /* Navigation */
   .desktop-nav { display: none; }
   .mobile-menu-toggle { display: flex; }
+
+  /* Hero Section Mobile/Tablet Overrides */
+  .hero {
+    min-height: auto;
+    padding: 3rem 0;
+  }
+  
+  .hero-bg-container, .hero-overlay {
+    display: none !important;
+  }
+  
+  .mobile-hero-image-wrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    margin: 1.5rem auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-card-border);
+  }
+  
+  .mobile-hero-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  
+  .hero-content {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 1rem 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  .hero-title {
+    font-size: clamp(2rem, 8vw, 3rem);
+    line-height: 1.1;
+    margin-bottom: 0.75rem;
+  }
+  
+  .hero-tagline {
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .hero-desc {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .search-widget {
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 2rem;
+    padding: 1.25rem;
+  }
+
+  .search-widget button {
+    grid-column: span 2;
+  }
   
   .logo-link {
     font-size: 1.15rem;
@@ -3698,59 +3763,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
     margin-bottom: 24px;
     padding: 1.25rem;
   }
-  
-  .hero {
-    min-height: auto;
-    padding: 3rem 0;
-  }
-  
-  .hero-bg-container, .hero-overlay {
-    display: none !important;
-  }
-  
-  .mobile-hero-image-wrap {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    aspect-ratio: 16 / 9;
-    margin: 1.5rem auto;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-    border: 1px solid var(--color-card-border);
-  }
-  
-  .mobile-hero-img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-  }
-  
-  .hero-content {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 1rem 0 !important;
-    margin-top: 0 !important;
-  }
-  
-  .hero-title {
-    font-size: clamp(2rem, 8vw, 3rem);
-    line-height: 1.1;
-    margin-bottom: 0.75rem;
-  }
-  
-  .hero-tagline {
-    font-size: 1.15rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .hero-desc {
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
+  .search-widget button {
+    grid-column: span 1;
   }
   
   .purpose-grid {
