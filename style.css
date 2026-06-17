@@ -464,7 +464,7 @@ img {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4); /* Premium dark overlay for text contrast while preserving image visibility */
+  background: transparent; /* Remove white gradient overlay */
   z-index: 2;
 }
 
@@ -476,9 +476,9 @@ img {
   padding: 3.5rem 2.5rem;
   text-align: center;
   margin-top: -2rem;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.5) 60%, rgba(255, 255, 255, 0) 100%); /* Soft localized white fog */
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   border: none;
   box-shadow: none;
 }
@@ -487,11 +487,12 @@ img {
   font-size: 1.25rem;
   letter-spacing: 0.35em;
   font-weight: 600;
-  color: var(--color-gold-light); /* Bright Gold on dark background */
+  color: var(--color-burgundy-light); /* Brighter Burgundy */
   text-transform: uppercase;
   margin-bottom: 0.5rem;
   display: block;
   animation: fade-in-up 0.8s ease-out forwards;
+  text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff; /* White fog glow behind letters */
 }
 
 .hero-title {
@@ -501,6 +502,7 @@ img {
   margin-bottom: 1rem;
   font-family: var(--font-serif);
   animation: fade-in-up 1s ease-out forwards;
+  filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px rgba(255, 255, 255, 0.9)); /* Halo glow on gradient text */
 }
 
 .mobile-hero-image-wrap {
@@ -511,17 +513,19 @@ img {
   font-size: 1.4rem;
   font-family: var(--font-serif);
   font-style: italic;
-  color: #FAF7F2; /* Warm White for contrast on dark background */
+  color: #b8860b; /* Richer, brighter gold for contrast */
   margin-bottom: 1.25rem;
   animation: fade-in-up 1.1s ease-out forwards;
+  text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff; /* White fog glow behind letters */
 }
 
 .hero-desc {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.85); /* Legible soft white text */
+  color: #443535; /* Darker, cleaner and highly legible text color */
   max-width: 650px;
   margin: 0 auto 2.5rem;
   animation: fade-in-up 1.2s ease-out forwards;
+  text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff; /* White fog glow behind letters */
 }
 
 /* Floating Quick Search Widget */
@@ -3728,10 +3732,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
     margin-top: 0 !important;
   }
   
-  .hero-subtitle-brand {
-    color: var(--color-burgundy-light) !important; /* Reset to dark burgundy on light mobile layout */
-  }
-  
   .hero-title {
     font-size: clamp(2rem, 8vw, 3rem);
     line-height: 1.1;
@@ -3741,13 +3741,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   .hero-tagline {
     font-size: 1.15rem;
     margin-bottom: 0.75rem;
-    color: #b8860b !important; /* Reset to dark gold on light mobile layout */
   }
   
   .hero-desc {
     font-size: 0.95rem;
     margin-bottom: 1.5rem;
-    color: #443535 !important; /* Reset to dark charcoal on light mobile layout */
   }
   
   .purpose-grid {

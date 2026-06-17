@@ -465,7 +465,7 @@ function renderLanding(container) {
     </section>
 
     <!-- Featured Rooms Carousel -->
-    <section class="section-padding" style="background: rgba(26, 26, 46, 0.3); border-y: 1px solid var(--color-card-border);">
+    <section class="section-padding" style="background: #FFFFFF; border-y: 1px solid var(--color-card-border);">
       <div class="container">
         <div class="section-title-wrapper">
           <span class="section-subtitle">Exquisite Discoveries</span>
