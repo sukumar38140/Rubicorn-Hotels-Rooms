@@ -426,13 +426,9 @@ function renderLanding(container) {
       <div class="hero-content">
         <span class="hero-subtitle-brand">Rubicorn Hotels & Rooms</span>
         <h1 class="hero-title gold-gradient-text">Where Every Stay Tells a Story</h1>
+        <div class="mobile-hero-img-container" id="mobile-hero-img-mount"></div>
         <p class="hero-tagline">City's Premier Lodging for Tourists, Pilgrims & Business Travelers</p>
         <p class="hero-desc">Experience our signature luxury comfort blends, nestled at the center of the cultural district and just steps away from sacred heritage temples.</p>
-        
-        <!-- Mobile Featured Image -->
-        <div class="hero-mobile-image-wrap">
-          <img src="assets/hero.png" alt="Rubicorn Hotels & Rooms" class="hero-mobile-image">
-        </div>
         
         <!-- Search widget -->
         <div class="search-widget" id="search-widget-form">
@@ -635,6 +631,12 @@ function renderLanding(container) {
 
   // Mount Gemini Assets
   mountGeminiImage(document.getElementById('hero-bg-mount'), 'hero', 'Hero Banner BG', 'hero-bg-image');
+  
+  const mobImgMount = document.getElementById('mobile-hero-img-mount');
+  if (mobImgMount) {
+    mountGeminiImage(mobImgMount, 'hero', 'Hero Banner Inline', 'mobile-hero-inline-img');
+  }
+  
   mountGeminiImage(document.getElementById('floor-visual-mount'), 'building', 'Hotel building visual', 'floor-illustration-img');
   mountGeminiImage(document.getElementById('about-img-mount'), '3F_ac', 'About image', 'floor-illustration-img');
 

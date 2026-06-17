@@ -432,6 +432,10 @@ img {
   overflow: hidden;
 }
 
+.mobile-hero-img-container {
+  display: none;
+}
+
 .hero-bg-container {
   position: absolute;
   top: 0;
@@ -509,10 +513,6 @@ img {
   max-width: 650px;
   margin: 0 auto 2.5rem;
   animation: fade-in-up 1.2s ease-out forwards;
-}
-
-.hero-mobile-image-wrap {
-  display: none;
 }
 
 /* Floating Quick Search Widget */
@@ -3657,26 +3657,32 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   }
 }
 
-/* Mobile landscape and medium screens */
 @media screen and (max-width: 768px) {
-  .hero-bg-container, .hero-overlay {
-    display: none;
+  .hero {
+    min-height: auto !important;
+    padding: 3rem 1rem 2rem !important;
   }
-  .hero-mobile-image-wrap {
+  .hero-bg-container {
+    display: none !important;
+  }
+  .hero-overlay {
+    display: none !important;
+  }
+  .mobile-hero-img-container {
     display: block;
-    width: calc(100% - 2rem);
-    max-width: 340px;
-    margin: 0 auto 1.75rem;
-    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    margin: 1.5rem auto;
+    border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: var(--shadow-card);
     border: 1px solid var(--color-card-border);
+    box-shadow: var(--shadow-card);
   }
-  .hero-mobile-image {
+  .mobile-hero-inline-img {
     width: 100%;
     height: auto;
     display: block;
-    object-fit: cover;
+    object-fit: contain;
   }
   .logo-link {
     font-size: 1rem;
