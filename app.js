@@ -429,6 +429,11 @@ function renderLanding(container) {
         <p class="hero-tagline">City's Premier Lodging for Tourists, Pilgrims & Business Travelers</p>
         <p class="hero-desc">Experience our signature luxury comfort blends, nestled at the center of the cultural district and just steps away from sacred heritage temples.</p>
         
+        <!-- Mobile Featured Image -->
+        <div class="hero-mobile-image-wrap">
+          <img src="assets/hero.png" alt="Rubicorn Hotels & Rooms" class="hero-mobile-image">
+        </div>
+        
         <!-- Search widget -->
         <div class="search-widget" id="search-widget-form">
           <div class="search-field">
