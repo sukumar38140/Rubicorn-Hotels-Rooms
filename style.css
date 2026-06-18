@@ -178,7 +178,7 @@ img {
 }
 
 .logo-img {
-  height: 48px;
+  height: 60px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 0 5px rgba(201, 168, 76, 0.3));
@@ -186,7 +186,7 @@ img {
 }
 
 .footer-logo .logo-img {
-  height: 56px;
+  height: 72px;
 }
 
 .desktop-nav {

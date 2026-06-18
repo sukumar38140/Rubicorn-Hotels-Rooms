@@ -2879,7 +2879,7 @@ function renderAdminLogin(container) {
   container.className = 'admin-login-layout';
   container.innerHTML = `
     <div class="admin-login-card fade-in-up-anim">
-      <div style="margin-bottom:1.5rem;"><img src="assets/logo.png" alt="Rubicorn Logo" style="height:60px; object-fit:contain; filter:drop-shadow(0 0 5px rgba(201, 168, 76, 0.35));"></div>
+      <div style="margin-bottom:1.5rem;"><img src="assets/logo.png" alt="Rubicorn Logo" style="height:80px; object-fit:contain; filter:drop-shadow(0 0 5px rgba(201, 168, 76, 0.35));"></div>
       <h2>Authorized Login</h2>
       <p style="color:var(--color-ivory-dim); font-size:0.9rem; margin-bottom:2.5rem;">Rubicorn Hotels Admin Desk Command Portal</p>
 
@@ -2953,7 +2953,7 @@ function renderAdminDashboard(subview) {
     <!-- Sidebar -->
     <aside class="admin-sidebar">
       <div class="admin-sidebar-header" style="text-align:center; padding-bottom:1rem; border-bottom:1px solid var(--color-card-border); width: 100%;">
-        <img src="assets/logo.png" alt="Rubicorn Logo" style="height:48px; object-fit:contain; margin-bottom:0.5rem; filter:drop-shadow(0 0 4px rgba(201, 168, 76, 0.35));">
+        <img src="assets/logo.png" alt="Rubicorn Logo" style="height:60px; object-fit:contain; margin-bottom:0.5rem; filter:drop-shadow(0 0 4px rgba(201, 168, 76, 0.35));">
         <h4 style="font-family:var(--font-sans); font-size:1rem; margin:0.25rem 0;">${roleTitle}</h4>
         <span style="font-size:0.7rem; color:var(--color-gold); font-weight:700; text-transform:uppercase;">${roleBadge}</span>
       </div>
