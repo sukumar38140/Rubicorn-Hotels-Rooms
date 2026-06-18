@@ -177,6 +177,18 @@ img {
   filter: drop-shadow(0 0 5px rgba(201, 168, 76, 0.3));
 }
 
+.logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(201, 168, 76, 0.3));
+  transition: var(--transition-smooth);
+}
+
+.footer-logo .logo-img {
+  height: 42px;
+}
+
 .desktop-nav {
   display: flex;
   align-items: center;
