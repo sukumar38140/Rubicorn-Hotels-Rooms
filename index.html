@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=4.3">
+  <link rel="stylesheet" href="style.css?v=4.4">
 </head>
 <body>
 
@@ -40,8 +40,21 @@
         <a href="#/contact" class="nav-item" id="nav-contact-link">Contact</a>
       </nav>
  
-      <!-- CTA Button -->
       <div class="header-actions">
+        <!-- Language Switcher -->
+        <div class="lang-select-wrapper">
+          <i class="fa-solid fa-globe lang-icon"></i>
+          <select id="lang-select" class="lang-select" aria-label="Select Language">
+            <option value="en">English</option>
+            <option value="te">తెలుగు</option>
+            <option value="hi">हिन्दी</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
         <a href="#/booking/step-1" class="btn-book-now">Book Now</a>
         <button class="mobile-menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu">
           <span class="bar"></span>
@@ -56,6 +69,20 @@
   <div class="mobile-menu-overlay" id="mobile-menu">
     <div class="mobile-menu-container">
       <nav class="mobile-nav">
+        <!-- Mobile Language Switcher -->
+        <div class="lang-select-wrapper" style="margin-bottom: 1.5rem; justify-content: center; width: fit-content; margin-inline: auto;">
+          <i class="fa-solid fa-globe lang-icon"></i>
+          <select id="mobile-lang-select" class="lang-select" aria-label="Select Language">
+            <option value="en">English</option>
+            <option value="te">తెలుగు</option>
+            <option value="hi">हिन्दी</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
         <a href="#/" class="mobile-nav-item">Home</a>
         <a href="#/rooms" class="mobile-nav-item" id="mob-rooms-link">Rooms & Floors</a>
         <a href="#/amenities" class="mobile-nav-item" id="mob-amenities-link">Amenities</a>
@@ -119,6 +146,7 @@
   </footer>
 
   <!-- Main Javascript Logic -->
+  <script src="translations.js?v=4.4"></script>
   <script src="app.js?v=2.0"></script>
 </body>
 </html>

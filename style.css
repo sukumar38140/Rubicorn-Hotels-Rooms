@@ -237,6 +237,40 @@ img {
   gap: 1.5rem;
 }
 
+.lang-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.6rem;
+  transition: var(--transition-smooth);
+}
+
+.lang-select-wrapper:hover {
+  border-color: var(--color-gold);
+  background: #ffffff;
+}
+
+.lang-icon {
+  color: var(--color-gold);
+  font-size: 0.95rem;
+}
+
+.lang-select {
+  background: transparent;
+  border: none;
+  color: var(--color-burgundy);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  padding: 0 0.5rem 0 0;
+  margin: 0;
+}
+
 .btn-book-now {
   background: linear-gradient(135deg, var(--color-burgundy) 0%, var(--color-burgundy-dark) 100%);
   color: #FAF7F2; /* Light text explicitly */

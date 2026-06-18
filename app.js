@@ -162,6 +162,7 @@ function loadStateFromStorage() {
       window.RubicornState.guests = parsed.guests || [];
       window.RubicornState.adminLoggedIn = parsed.adminLoggedIn || false;
       window.RubicornState.userRole = parsed.userRole || null;
+      window.RubicornState.language = parsed.language || 'en';
       if (parsed.currentBooking) {
         window.RubicornState.currentBooking = parsed.currentBooking;
       }
@@ -186,7 +187,8 @@ function saveStateToStorage() {
     guests: window.RubicornState.guests,
     adminLoggedIn: window.RubicornState.adminLoggedIn,
     userRole: window.RubicornState.userRole,
-    currentBooking: window.RubicornState.currentBooking
+    currentBooking: window.RubicornState.currentBooking,
+    language: window.RubicornState.language || 'en'
   }));
 }
 
@@ -196,6 +198,7 @@ function resetStateStore() {
   window.RubicornState.guests = [];
   window.RubicornState.adminLoggedIn = false;
   window.RubicornState.userRole = null;
+  window.RubicornState.language = 'en';
   window.RubicornState.currentBooking = {
     checkIn: '',
     checkOut: '',
@@ -220,6 +223,91 @@ function resetStateStore() {
   };
   saveStateToStorage();
 }
+
+// -------------------------------------------------------------
+// MULTI-LANGUAGE TRANSLATION ENGINE
+// -------------------------------------------------------------
+window.t = function(key) {
+  if (!key) return key;
+  const lang = (window.RubicornState && window.RubicornState.language) || 'en';
+  if (lang === 'en') return key;
+  const dict = window.RubicornTranslations[lang];
+  return (dict && dict[key]) ? dict[key] : key;
+};
+
+window.translateElement = function(element) {
+  if (!element) return;
+  const lang = (window.RubicornState && window.RubicornState.language) || 'en';
+  const dict = window.RubicornTranslations[lang];
+
+  // Walk text nodes
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+  let node;
+  while (node = walker.nextNode()) {
+    if (node._originalValue === undefined) {
+      node._originalValue = node.nodeValue;
+    }
+    const originalText = node._originalValue.trim();
+    if (originalText) {
+      if (lang === 'en') {
+        node.nodeValue = node._originalValue;
+      } else if (dict && dict[originalText]) {
+        node.nodeValue = node._originalValue.replace(originalText, dict[originalText]);
+      }
+    }
+  }
+  
+  // Walk input placeholders
+  element.querySelectorAll('[placeholder]').forEach(el => {
+    if (el._originalPlaceholder === undefined) {
+      el._originalPlaceholder = el.getAttribute('placeholder');
+    }
+    const origPh = el._originalPlaceholder;
+    if (origPh) {
+      if (lang === 'en') {
+        el.setAttribute('placeholder', origPh);
+      } else if (dict && dict[origPh]) {
+        el.setAttribute('placeholder', dict[origPh]);
+      }
+    }
+  });
+  
+  // Walk button values
+  element.querySelectorAll('input[type="button"], input[type="submit"]').forEach(el => {
+    if (el._originalValue === undefined) {
+      el._originalValue = el.value;
+    }
+    const origVal = el._originalValue;
+    if (origVal) {
+      if (lang === 'en') {
+        el.value = origVal;
+      } else if (dict && dict[origVal]) {
+        el.value = dict[origVal];
+      }
+    }
+  });
+};
+
+// Setup reactive MutationObserver to automatically translate dynamic dialogs, toasts, or modals
+const translationObserver = new MutationObserver((mutations) => {
+  const lang = (window.RubicornState && window.RubicornState.language) || 'en';
+  if (lang === 'en') return;
+  
+  for (const mutation of mutations) {
+    for (const addedNode of mutation.addedNodes) {
+      if (addedNode.nodeType === Node.ELEMENT_NODE) {
+        if (addedNode.classList.contains('modal-overlay') || 
+            addedNode.classList.contains('toast') ||
+            addedNode.classList.contains('modal-card') ||
+            addedNode.id === 'admin-modal-mount' ||
+            addedNode.classList.contains('flatpickr-calendar')) {
+          window.translateElement(addedNode);
+        }
+      }
+    }
+  }
+});
+translationObserver.observe(document.body, { childList: true, subtree: true });
 
 // Helper utility for Date calculation
 function calculateNights(checkIn, checkOut) {
@@ -347,6 +435,11 @@ function router() {
       </div>
     `;
   }
+
+  // Run DOM translator on main app view and headers/footers
+  window.translateElement(appContainer);
+  window.translateElement(document.getElementById('main-header'));
+  window.translateElement(document.querySelector('footer.site-footer'));
 }
 
 function updateNavActiveLinks(currentHash) {
@@ -4040,7 +4133,7 @@ function showToast(message, type = 'info') {
 
   toast.innerHTML = `
     <i class="fa-solid ${iconClass} toast-icon ${type}"></i>
-    <div class="toast-content">${message}</div>
+    <div class="toast-content">${window.t(message)}</div>
   `;
   
   mount.appendChild(toast);
@@ -4066,6 +4159,34 @@ window.addEventListener('hashchange', router);
 window.addEventListener('load', () => {
   // Load local state registry or seed new
   loadStateFromStorage();
+  
+  // Set initial language selection in dropdowns
+  const currentLang = window.RubicornState.language || 'en';
+  const langSelect = document.getElementById('lang-select');
+  const mobLangSelect = document.getElementById('mobile-lang-select');
+  if (langSelect) langSelect.value = currentLang;
+  if (mobLangSelect) mobLangSelect.value = currentLang;
+
+  // Bind dropdown change event listeners
+  const onLangChange = (e) => {
+    const selectedLang = e.target.value;
+    window.RubicornState.language = selectedLang;
+    saveStateToStorage();
+    
+    // Sync other dropdown
+    if (langSelect) langSelect.value = selectedLang;
+    if (mobLangSelect) mobLangSelect.value = selectedLang;
+    
+    // Run translation on header, footer, and main content
+    window.translateElement(document.getElementById('main-header'));
+    window.translateElement(document.querySelector('footer.site-footer'));
+    
+    // Re-trigger router to re-render clean English templates and then translate them
+    router();
+  };
+
+  if (langSelect) langSelect.onchange = onLangChange;
+  if (mobLangSelect) mobLangSelect.onchange = onLangChange;
   
   // Attach global header scroll class
   const header = document.getElementById('main-header');
