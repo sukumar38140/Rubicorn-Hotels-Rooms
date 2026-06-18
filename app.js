@@ -2410,6 +2410,7 @@ function renderStep5(canvas, room) {
     <div class="pay-methods-tabs" style="margin-bottom: 1.5rem;">
       <span class="pay-tab-btn active" data-method="card"><i class="fa-solid fa-credit-card"></i> Card</span>
       <span class="pay-tab-btn" data-method="upi"><i class="fa-solid fa-qrcode"></i> UPI ID / QR</span>
+      ${window.RubicornState.adminLoggedIn ? `<span class="pay-tab-btn" data-method="cash"><i class="fa-solid fa-money-bill-wave"></i> Cash</span>` : ''}
     </div>
 
     <!-- Payment inputs -->
@@ -2463,6 +2464,7 @@ function renderStep5(canvas, room) {
       payTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       const method = tab.getAttribute('data-method');
+      window.RubicornState.currentBooking.paymentMethod = method;
       const fCanvas = document.getElementById('payment-form-canvas');
       if (method === 'card') {
         fCanvas.innerHTML = `
@@ -2487,7 +2489,7 @@ function renderStep5(canvas, room) {
             </div>
           </div>
         `;
-      } else {
+      } else if (method === 'upi') {
         fCanvas.innerHTML = `
           <div class="checkbox-group" style="gap:1.5rem; text-align:center;">
             <div class="search-field" style="text-align:left;">
@@ -2498,6 +2500,26 @@ function renderStep5(canvas, room) {
             <div>
               <i class="fa-solid fa-qrcode" style="font-size: 6rem; color: var(--color-gold); margin-bottom: 0.5rem;"></i>
               <p style="font-size:0.75rem; color:var(--color-ivory-dim);">Scan this dummy gateway QR with your GPay/PhonePe App.</p>
+            </div>
+          </div>
+        `;
+      } else if (method === 'cash') {
+        const is12Hours = parseInt(current.durationHours) === 12;
+        const baseCost = is12Hours ? Math.max(room.price - 300, 200) : room.price;
+        const extraBedRate = room.ac ? 500 : 350;
+        const extraBedCost = current.extraBeds * extraBedRate;
+        let addonsCost = 0;
+        current.addons.forEach(ad => { addonsCost += ad.price; });
+        let subtotal = baseCost + extraBedCost + addonsCost;
+        const totalAmount = Math.round(subtotal + (subtotal * 0.18));
+
+        fCanvas.innerHTML = `
+          <div class="checkbox-group" style="gap:1.5rem; text-align:center;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 1.5rem; text-align: left;">
+              <h4 style="color:var(--color-success); margin-bottom:0.5rem;"><i class="fa-solid fa-money-bill-wave"></i> Cash Payment Desk Mode</h4>
+              <p style="font-size:0.85rem; color:var(--color-ivory-dim); line-height: 1.5; margin:0;">
+                Collect cash payment of <strong>₹${totalAmount.toLocaleString('en-IN')}</strong> from the guest. Verify that currency is correct and counted. Once collected, click <strong>Pay & Block Room</strong> to complete this cash transaction.
+              </p>
             </div>
           </div>
         `;
@@ -2577,6 +2599,7 @@ function renderStep5(canvas, room) {
         extras: current.extraBeds > 0 ? `${current.extraBeds} Extra Rollaway Bed(s)` : 'None',
         food: 'None',
         totalAmount: totalAmount,
+        paymentMethod: current.paymentMethod || 'card',
         status: 'confirmed',
         bookingDate: getFormattedDate(0)
       };
@@ -2877,8 +2900,8 @@ function renderAdminLogin(container) {
       
       <div style="font-size:0.75rem; color:var(--color-ivory-dim); margin-top:2rem; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-card-border);">
         <div style="font-weight: 700; color: var(--color-gold); margin-bottom: 0.25rem;"><i class="fa-solid fa-circle-info"></i> Seeded Review Credentials:</div>
-        • <strong>Admin (Observer)</strong>: <span style="font-family: monospace;">admin@rubicorn.com</span> / <span style="font-family: monospace;">Rubicorn@2025</span><br>
-        • <strong>Manager (Operator)</strong>: <span style="font-family: monospace;">manager@rubicorn.com</span> / <span style="font-family: monospace;">Manager@2025</span>
+        • <strong>Admin (Owner / Super Powers)</strong>: <span style="font-family: monospace;">admin@rubicorn.com</span> / <span style="font-family: monospace;">Rubicorn@2025</span><br>
+        • <strong>Manager (Receptionist)</strong>: <span style="font-family: monospace;">manager@rubicorn.com</span> / <span style="font-family: monospace;">Manager@2025</span>
       </div>
     </div>
   `;
@@ -2895,7 +2918,7 @@ function renderAdminLogin(container) {
       // Notify active header
       updateNavActiveLinks('/admin/dashboard');
       
-      showToast('Welcome, Administrator (Observer Mode)', 'success');
+      showToast('Welcome, Administrator (Owner / Super User)', 'success');
       window.location.hash = '#/admin/dashboard';
     } else if (email === 'manager@rubicorn.com' && pass === 'Manager@2025') {
       window.RubicornState.adminLoggedIn = true;
@@ -2905,7 +2928,7 @@ function renderAdminLogin(container) {
       // Notify active header
       updateNavActiveLinks('/admin/dashboard');
       
-      showToast('Welcome, Manager/Receptionist (Operator Mode)', 'success');
+      showToast('Welcome, Manager/Receptionist (Receptionist Mode)', 'success');
       window.location.hash = '#/admin/dashboard';
     } else {
       alert("Invalid login credentials.\n\nUse review options:\n- admin@rubicorn.com / Rubicorn@2025\n- manager@rubicorn.com / Manager@2025");
@@ -2924,7 +2947,7 @@ function renderAdminDashboard(subview) {
 
   const userRole = window.RubicornState.userRole || 'manager';
   const roleTitle = userRole === 'admin' ? 'Administrator' : 'Manager / Receptionist';
-  const roleBadge = userRole === 'admin' ? 'Observer' : 'Desk Operator';
+  const roleBadge = userRole === 'admin' ? 'Owner (Super User)' : 'Receptionist / Desk Operator';
 
   mainDiv.innerHTML = `
     <!-- Sidebar -->
@@ -3317,7 +3340,6 @@ function openAdminActionModal(room) {
   }
 
   const isAdmin = window.RubicornState.userRole === 'admin';
-  const disabledAttr = isAdmin ? 'disabled style="opacity:0.55; cursor:not-allowed;"' : '';
 
   const modalBox = document.createElement('div');
   modalBox.className = 'modal-card';
@@ -3331,28 +3353,21 @@ function openAdminActionModal(room) {
       <strong>Category Class:</strong> ${room.type} (${room.floor} Level)
     </div>
 
-    ${isAdmin ? `
-      <div class="alert-warning" style="margin-bottom: 1.25rem;">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span><strong>Observer Mode:</strong> Room action controls are disabled. Log in as a Manager/Receptionist to execute room status changes.</span>
-      </div>
-    ` : ''}
-
     <div class="checkbox-group" style="gap:1rem; border:1px solid var(--color-card-border); padding:1.25rem; border-radius:8px; background:var(--color-charcoal);">
       ${descHTML}
     </div>
 
     <div class="modal-action-row">
       ${room.status === 'occupied' ? `
-        <button class="btn-modal primary" id="btn-admin-checkout" ${disabledAttr}>Mark Check-Out</button>
+        <button class="btn-modal primary" id="btn-admin-checkout">Mark Check-Out</button>
       ` : ''}
       
       ${room.status === 'available' ? `
-        <button class="btn-modal primary" id="btn-admin-block" style="background:#d97706; border-color:#d97706; ${isAdmin ? 'opacity:0.55; cursor:not-allowed;' : ''}" ${disabledAttr}>Block Room</button>
+        <button class="btn-modal primary" id="btn-admin-block" style="background:#d97706; border-color:#d97706;">Block Room</button>
       ` : ''}
 
       ${room.status === 'maintenance' ? `
-        <button class="btn-modal primary" id="btn-admin-unblock" ${disabledAttr}>Unblock (Make Avail)</button>
+        <button class="btn-modal primary" id="btn-admin-unblock">Unblock (Make Avail)</button>
       ` : ''}
       
       <button class="btn-modal secondary" id="btn-cancel-modal">Cancel Action</button>
@@ -3366,7 +3381,7 @@ function openAdminActionModal(room) {
   document.getElementById('btn-cancel-modal').onclick = closeModal;
 
   // Actions Binds
-  if (room.status === 'occupied' && !isAdmin) {
+  if (room.status === 'occupied') {
     document.getElementById('btn-admin-checkout').onclick = () => {
       if (confirm(`Confirm checkout processing for ${room.currentGuest.name}?`)) {
         // Change room back to available
@@ -3386,7 +3401,7 @@ function openAdminActionModal(room) {
     };
   }
 
-  if (room.status === 'available' && !isAdmin) {
+  if (room.status === 'available') {
     document.getElementById('btn-admin-block').onclick = () => {
       if (confirm(`Block room ${room.id} for maintenance scheduling?`)) {
         const stateRoom = window.RubicornState.rooms.find(r => r.id === room.id);
@@ -3401,7 +3416,7 @@ function openAdminActionModal(room) {
     };
   }
 
-  if (room.status === 'maintenance' && !isAdmin) {
+  if (room.status === 'maintenance') {
     document.getElementById('btn-admin-unblock').onclick = () => {
       const stateRoom = window.RubicornState.rooms.find(r => r.id === room.id);
       stateRoom.status = 'available';
@@ -3451,7 +3466,9 @@ function renderDashboardBookings(workspace) {
               <th>Extras</th>
               <th>Pre-ordered F&B</th>
               <th>Total Billing</th>
+              <th>Payment Method</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="admin-bookings-list-tbody"></tbody>
@@ -3490,6 +3507,8 @@ function renderDashboardBookings(workspace) {
     renderBookingsList(filtered);
   }
 
+  const isAdmin = window.RubicornState.userRole === 'admin';
+
   function renderBookingsList(bookings) {
     const tbody = document.getElementById('admin-bookings-list-tbody');
     tbody.innerHTML = '';
@@ -3497,7 +3516,7 @@ function renderDashboardBookings(workspace) {
     if (bookings.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align:center; padding:3rem; color:var(--color-ivory-dim);">
+          <td colspan="10" style="text-align:center; padding:3rem; color:var(--color-ivory-dim);">
             No matching booking records found.
           </td>
         </tr>
@@ -3506,6 +3525,38 @@ function renderDashboardBookings(workspace) {
     }
 
     bookings.forEach(b => {
+      const isPending = b.approvalStatus === 'pending_approval';
+      const statusPill = isPending 
+        ? `<span class="status-pill warning" style="background:rgba(234,179,8,0.15); color:var(--color-maintenance); border:1px solid rgba(234,179,8,0.3);">⚠️ Pending Mod</span>` 
+        : `<span class="status-pill confirmed">✓ Confirmed</span>`;
+      
+      const paymentText = b.paymentMethod ? b.paymentMethod.toUpperCase() : 'CARD';
+      const paymentIcon = b.paymentMethod === 'cash' ? '<i class="fa-solid fa-money-bill-wave" style="color: var(--color-success);"></i>' : (b.paymentMethod === 'upi' ? '<i class="fa-solid fa-qrcode"></i>' : '<i class="fa-solid fa-credit-card"></i>');
+      
+      let actionButtons = '';
+      if (isAdmin) {
+        if (isPending) {
+          actionButtons = `
+            <button class="btn-book-now" onclick="openReviewApprovalModal('${b.bookingId}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #eab308; border-color: #eab308; white-space: nowrap;"><i class="fa-solid fa-clipboard-check"></i> Review</button>
+          `;
+        } else {
+          actionButtons = `
+            <button class="btn-book-now" onclick="openModifyBookingModal('${b.bookingId}', true)" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;"><i class="fa-solid fa-pencil"></i> Modify</button>
+          `;
+        }
+      } else {
+        // Manager / Receptionist
+        if (isPending) {
+          actionButtons = `
+            <span style="font-size:0.75rem; color:var(--color-gold); font-weight:600; white-space: nowrap;"><i class="fa-solid fa-hourglass-half"></i> Pending Admin</span>
+          `;
+        } else {
+          actionButtons = `
+            <button class="btn-book-now" onclick="openModifyBookingModal('${b.bookingId}', false)" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #605050; border-color: #605050; white-space: nowrap;"><i class="fa-solid fa-lock"></i> Request Edit</button>
+          `;
+        }
+      }
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-family:monospace; font-weight:700; color:var(--color-gold);">${b.bookingId}</td>
@@ -3521,9 +3572,11 @@ function renderDashboardBookings(workspace) {
           <div style="font-size:0.7rem; color:var(--color-ivory-dim);">${b.nights} night(s) | ${b.guests} guest(s)</div>
         </td>
         <td style="font-size:0.8rem;">${b.extras}</td>
-        <td style="font-size:0.8rem; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${b.food}">${b.food}</td>
+        <td style="font-size:0.8rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${b.food}">${b.food}</td>
         <td style="font-weight:700; color:var(--color-gold);">₹${b.totalAmount.toLocaleString('en-IN')}</td>
-        <td><span class="status-pill confirmed">✓ Confirmed</span></td>
+        <td style="font-size:0.8rem; white-space:nowrap;">${paymentIcon} ${paymentText}</td>
+        <td>${statusPill}</td>
+        <td>${actionButtons}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -3531,6 +3584,274 @@ function renderDashboardBookings(workspace) {
 
   // Initial render load
   applyBookingFilters();
+}
+
+// B.3.1 Modal handler to modify bookings
+function openModifyBookingModal(bookingId, directEdit) {
+  const mount = document.getElementById('admin-modal-mount');
+  mount.innerHTML = '';
+  mount.classList.add('open');
+
+  const b = window.RubicornState.bookings.find(x => x.bookingId === bookingId);
+  if (!b) {
+    showToast('Booking not found', 'error');
+    return;
+  }
+
+  const modalBox = document.createElement('div');
+  modalBox.className = 'modal-card';
+  modalBox.style.maxWidth = '600px';
+  modalBox.innerHTML = `
+    <div class="modal-header">
+      <h3 style="font-size:1.35rem;"><i class="fa-solid fa-file-signature"></i> ${directEdit ? 'Modify Booking' : 'Request Booking Modification'}</h3>
+      <button class="modal-close-btn" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div style="font-size:0.85rem; color:var(--color-ivory-dim); margin-bottom:1rem;">
+      <strong>Booking ID:</strong> ${b.bookingId} | <strong>Current Room:</strong> Room ${b.roomId}
+    </div>
+
+    ${!directEdit ? `
+      <div class="alert-warning" style="margin-bottom: 1.25rem; background: rgba(201, 168, 76, 0.06); border-color: rgba(201, 168, 76, 0.25);">
+        <i class="fa-solid fa-circle-info"></i>
+        <span><strong>Receptionist Notice:</strong> Since you are logged in as a Receptionist/Manager, these changes will require Admin (Owner) approval before taking effect.</span>
+      </div>
+    ` : `
+      <div class="alert-warning" style="margin-bottom: 1.25rem; background: rgba(16, 185, 129, 0.06); border-color: rgba(16, 185, 129, 0.25); color: var(--color-success);">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span><strong>Admin Super User:</strong> You have owner permissions to modify this booking directly in real time.</span>
+      </div>
+    `}
+
+    <form id="modify-booking-form" onsubmit="return false;" style="text-align:left;">
+      <div class="checkbox-group" style="gap:1rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1.5rem;">
+        <div class="search-field">
+          <label for="mod-guest-name">Guest Name</label>
+          <input type="text" id="mod-guest-name" value="${b.guestName}" required>
+        </div>
+        <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="search-field">
+            <label for="mod-guest-age">Guest Age</label>
+            <input type="number" id="mod-guest-age" value="${b.guestAge || ''}" required>
+          </div>
+          <div class="search-field">
+            <label for="mod-guests-count">Guests Count</label>
+            <input type="number" id="mod-guests-count" value="${b.guests || 1}" min="1" max="10" required>
+          </div>
+        </div>
+        <div class="search-field">
+          <label for="mod-guest-address">Guest Address</label>
+          <input type="text" id="mod-guest-address" value="${b.guestAddress || ''}" required>
+        </div>
+        <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="search-field">
+            <label for="mod-checkin">Check-in Date</label>
+            <input type="date" id="mod-checkin" value="${b.checkIn}" required>
+          </div>
+          <div class="search-field">
+            <label for="mod-checkout">Check-out Date</label>
+            <input type="date" id="mod-checkout" value="${b.checkOut}" required>
+          </div>
+        </div>
+        <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div class="search-field">
+            <label for="mod-payment-method">Payment Method</label>
+            <select id="mod-payment-method" style="width:100%;">
+              <option value="card" ${b.paymentMethod === 'card' ? 'selected' : ''}>Card</option>
+              <option value="upi" ${b.paymentMethod === 'upi' ? 'selected' : ''}>UPI ID / QR</option>
+              <option value="cash" ${b.paymentMethod === 'cash' ? 'selected' : ''}>Cash</option>
+            </select>
+          </div>
+          <div class="search-field">
+            <label for="mod-total-amount">Total Billing (₹)</label>
+            <input type="number" id="mod-total-amount" value="${b.totalAmount}" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-action-row">
+        <button type="submit" class="btn-modal primary">${directEdit ? 'Save Changes' : 'Submit for Approval'}</button>
+        <button type="button" class="btn-modal secondary" id="btn-cancel-modify">Cancel</button>
+      </div>
+    </form>
+  `;
+  mount.appendChild(modalBox);
+
+  // Close Binds
+  const closeModal = () => { mount.classList.remove('open'); };
+  document.getElementById('btn-close-modal').onclick = closeModal;
+  document.getElementById('btn-cancel-modify').onclick = closeModal;
+
+  // Submit Handler
+  document.getElementById('modify-booking-form').onsubmit = () => {
+    const updated = {
+      guestName: document.getElementById('mod-guest-name').value,
+      guestAge: parseInt(document.getElementById('mod-guest-age').value),
+      guestAddress: document.getElementById('mod-guest-address').value,
+      checkIn: document.getElementById('mod-checkin').value,
+      checkOut: document.getElementById('mod-checkout').value,
+      guests: parseInt(document.getElementById('mod-guests-count').value),
+      paymentMethod: document.getElementById('mod-payment-method').value,
+      totalAmount: parseInt(document.getElementById('mod-total-amount').value),
+    };
+
+    if (directEdit) {
+      // Direct Admin Edit
+      b.guestName = updated.guestName;
+      b.guestAge = updated.guestAge;
+      b.guestAddress = updated.guestAddress;
+      b.checkIn = updated.checkIn;
+      b.checkOut = updated.checkOut;
+      b.guests = updated.guests;
+      b.paymentMethod = updated.paymentMethod;
+      b.totalAmount = updated.totalAmount;
+      
+      // Update room booking name if occupied
+      const targetRoom = window.RubicornState.rooms.find(r => r.id === b.roomId);
+      if (targetRoom && targetRoom.currentGuest && targetRoom.currentGuest.bookingId === b.bookingId) {
+        targetRoom.currentGuest.name = updated.guestName;
+        targetRoom.currentGuest.checkIn = updated.checkIn;
+        targetRoom.currentGuest.checkOut = updated.checkOut;
+        targetRoom.currentGuest.guestsCount = updated.guests;
+      }
+      
+      saveStateToStorage();
+      showToast('Booking updated successfully by Admin.', 'success');
+    } else {
+      // Receptionist/Manager Request
+      b.approvalStatus = 'pending_approval';
+      b.requestedChanges = updated;
+      saveStateToStorage();
+      showToast('Modification request submitted to Admin for approval.', 'info');
+    }
+
+    closeModal();
+    // Refresh subview
+    renderDashboardBookings(document.getElementById('admin-workspace-content'));
+  };
+}
+
+// B.3.2 Modal handler for Admin to review modification request
+function openReviewApprovalModal(bookingId) {
+  const mount = document.getElementById('admin-modal-mount');
+  mount.innerHTML = '';
+  mount.classList.add('open');
+
+  const b = window.RubicornState.bookings.find(x => x.bookingId === bookingId);
+  if (!b || !b.requestedChanges) {
+    showToast('No pending modifications found for this booking.', 'error');
+    mount.classList.remove('open');
+    return;
+  }
+
+  const req = b.requestedChanges;
+
+  const diffRow = (label, currentVal, newVal) => {
+    const isChanged = String(currentVal) !== String(newVal);
+    const highlight = isChanged ? 'background: rgba(201, 168, 76, 0.08); font-weight:700; border-left: 3px solid var(--color-gold); padding-left:4px;' : '';
+    return `
+      <tr style="${highlight}">
+        <td style="padding:0.5rem; font-size:0.85rem; font-weight:600; color:var(--color-gold);">${label}</td>
+        <td style="padding:0.5rem; font-size:0.85rem; color:var(--color-ivory-dim);">${currentVal}</td>
+        <td style="padding:0.5rem; font-size:0.85rem; color:var(--color-success);">${isChanged ? `<strong>${newVal}</strong>` : newVal}</td>
+      </tr>
+    `;
+  };
+
+  const modalBox = document.createElement('div');
+  modalBox.className = 'modal-card';
+  modalBox.style.maxWidth = '650px';
+  modalBox.innerHTML = `
+    <div class="modal-header">
+      <h3 style="font-size:1.35rem;"><i class="fa-solid fa-clipboard-check"></i> Review Modification Request</h3>
+      <button class="modal-close-btn" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div style="font-size:0.85rem; color:var(--color-ivory-dim); margin-bottom:1.25rem;">
+      <strong>Booking ID:</strong> ${b.bookingId} | <strong>Guest Name:</strong> ${b.guestName}
+    </div>
+
+    <div class="alert-warning" style="margin-bottom: 1.5rem; background: rgba(234, 179, 8, 0.06); border-color: rgba(234, 179, 8, 0.25);">
+      <i class="fa-solid fa-bell"></i>
+      <span>A receptionist/manager has requested the following changes to this room booking. Please review before approving.</span>
+    </div>
+
+    <div style="border: 1px solid var(--color-card-border); border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem; background: var(--color-charcoal);">
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--color-card-border); background: var(--color-espresso);">
+            <th style="padding:0.6rem; font-size:0.8rem; text-transform:uppercase; color:var(--color-gold);">Field</th>
+            <th style="padding:0.6rem; font-size:0.8rem; text-transform:uppercase; color:var(--color-ivory-dim);">Current Detail</th>
+            <th style="padding:0.6rem; font-size:0.8rem; text-transform:uppercase; color:var(--color-success);">Requested Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${diffRow('Guest Name', b.guestName, req.guestName)}
+          ${diffRow('Guest Age', b.guestAge || 'N/A', req.guestAge)}
+          ${diffRow('Address', b.guestAddress || 'N/A', req.guestAddress)}
+          ${diffRow('Check-in Date', b.checkIn, req.checkIn)}
+          ${diffRow('Check-out Date', b.checkOut, req.checkOut)}
+          ${diffRow('Guests Count', b.guests, req.guests)}
+          ${diffRow('Payment Method', b.paymentMethod ? b.paymentMethod.toUpperCase() : 'CARD', req.paymentMethod.toUpperCase())}
+          ${diffRow('Total Billing', `₹${b.totalAmount.toLocaleString('en-IN')}`, `₹${req.totalAmount.toLocaleString('en-IN')}`)}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-action-row">
+      <button class="btn-modal primary" id="btn-approve-mod" style="background:var(--color-success); border-color:var(--color-success);"><i class="fa-solid fa-check"></i> Approve & Apply</button>
+      <button class="btn-modal primary" id="btn-reject-mod" style="background:#ef4444; border-color:#ef4444;"><i class="fa-solid fa-xmark"></i> Reject & Dismiss</button>
+      <button class="btn-modal secondary" id="btn-cancel-review">Close</button>
+    </div>
+  `;
+  mount.appendChild(modalBox);
+
+  // Close Binds
+  const closeModal = () => { mount.classList.remove('open'); };
+  document.getElementById('btn-close-modal').onclick = closeModal;
+  document.getElementById('btn-cancel-review').onclick = closeModal;
+
+  // Actions Binds
+  document.getElementById('btn-approve-mod').onclick = () => {
+    // Apply changes
+    b.guestName = req.guestName;
+    b.guestAge = req.guestAge;
+    b.guestAddress = req.guestAddress;
+    b.checkIn = req.checkIn;
+    b.checkOut = req.checkOut;
+    b.guests = req.guests;
+    b.paymentMethod = req.paymentMethod;
+    b.totalAmount = req.totalAmount;
+
+    // Update room if occupied
+    const targetRoom = window.RubicornState.rooms.find(r => r.id === b.roomId);
+    if (targetRoom && targetRoom.currentGuest && targetRoom.currentGuest.bookingId === b.bookingId) {
+      targetRoom.currentGuest.name = req.guestName;
+      targetRoom.currentGuest.checkIn = req.checkIn;
+      targetRoom.currentGuest.checkOut = req.checkOut;
+      targetRoom.currentGuest.guestsCount = req.guests;
+    }
+
+    // Clear request status
+    b.approvalStatus = null;
+    b.requestedChanges = null;
+
+    saveStateToStorage();
+    showToast('Modification request approved and applied.', 'success');
+    closeModal();
+    renderDashboardBookings(document.getElementById('admin-workspace-content'));
+  };
+
+  document.getElementById('btn-reject-mod').onclick = () => {
+    // Clear request status
+    b.approvalStatus = null;
+    b.requestedChanges = null;
+
+    saveStateToStorage();
+    showToast('Modification request rejected and dismissed.', 'info');
+    closeModal();
+    renderDashboardBookings(document.getElementById('admin-workspace-content'));
+  };
 }
 
 // B.4 Guests Registry database
