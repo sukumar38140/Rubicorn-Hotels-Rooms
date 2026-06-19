@@ -3,6 +3,14 @@
    Built with Vanilla JS | Real-Time Session Store | High Fidelity UI
    ========================================================================== */
 
+// 0. Security Utilities
+function escapeHTML(str) {
+  if (!str || typeof str !== 'string') return str;
+  return str.replace(/[&<>"']/g, (m) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;'
+  })[m]);
+}
+
 // 1. Core State Configuration & Seeding
 const DEFAULT_ROOMS = [
   // Ground Floor (GF) — 10 Rooms
@@ -411,6 +419,24 @@ function router() {
   updateNavActiveLinks(cleanHash);
   updateHeaderProfileLink();
   
+  // SEO: Dynamic page titles and meta descriptions
+  const routeMeta = {
+    '/': { title: 'Rubicorn Hotels & Rooms | Where Every Stay Tells a Story', desc: 'Experience luxury heritage lodging in Tirupati. Book AC and Non-AC standard, comfort, deluxe, and royal suites near sacred temples.' },
+    '/rooms': { title: 'Browse Rooms & Suites | Rubicorn Hotels', desc: 'Explore our collection of 46 rooms across 5 floors — from budget-friendly comfort rooms to panoramic temple view suites.' },
+    '/amenities': { title: 'Amenities & Services | Rubicorn Hotels', desc: 'Discover premium amenities including Wi-Fi, room service, temple shuttle, laundry, and 24/7 front desk support.' },
+    '/about': { title: 'About Rubicorn Hotels & Rooms | Our Story', desc: 'Learn about Rubicorn Hotels heritage and our commitment to providing comfortable stays for tourists, pilgrims, and business travelers.' },
+    '/contact': { title: 'Contact & Location | Rubicorn Hotels', desc: 'Reach us at 12, Karakambadi Road, Tirupati. Call +91 98765 43210 or email reservations@rubicornhotels.com.' },
+    '/admin': { title: 'Staff Portal | Rubicorn Hotels', desc: 'Authorized staff login portal for hotel management.' },
+    '/booking/step-1': { title: 'Select Your Room | Rubicorn Booking', desc: 'Choose your preferred room from our interactive floor map.' },
+    '/booking/confirmed': { title: 'Booking Confirmed! | Rubicorn Hotels', desc: 'Your reservation is confirmed. View your booking details and voucher.' }
+  };
+  const metaKey = Object.keys(routeMeta).find(k => hashPathOnly === k || hashPathOnly.startsWith(k + '/'));
+  if (metaKey && routeMeta[metaKey]) {
+    document.title = routeMeta[metaKey].title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', routeMeta[metaKey].desc);
+  }
+  
   const appContainer = document.getElementById('app');
   appContainer.innerHTML = '';
   window.scrollTo(0, 0);
@@ -475,7 +501,7 @@ function updateHeaderProfileLink() {
 
   if (isLoggedIn) {
     profileLink.setAttribute('href', '#/admin/dashboard');
-    const roleText = userRole === 'admin' ? 'Admin' : 'Staff';
+    const roleText = userRole === 'admin' ? 'Admin' : 'Receptionist';
     profileLink.innerHTML = `
       <i class="fa-solid fa-circle-user" style="color: var(--color-gold);"></i>
       <span class="admin-profile-text">${roleText}</span>
@@ -484,7 +510,7 @@ function updateHeaderProfileLink() {
     profileLink.setAttribute('href', '#/admin');
     profileLink.innerHTML = `
       <i class="fa-solid fa-user-shield" style="color: var(--color-gold);"></i>
-      <span class="admin-profile-text">Staff Login</span>
+      <span class="admin-profile-text">Login</span>
     `;
   }
 }
@@ -2450,9 +2476,9 @@ function renderStep4(canvas) {
         </div>
         <div>
           <h5 style="color: var(--color-gold-dark); margin-bottom: 0.5rem; font-size: 1.1rem; font-family: var(--font-serif);">Guest Profile</h5>
-          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Full Name:</strong> ${p.name || 'N/A'}</p>
-          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Age:</strong> ${p.age || 'N/A'}</p>
-          <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><strong>Address:</strong> ${p.address || 'N/A'}</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Full Name:</strong> ${escapeHTML(p.name) || 'N/A'}</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.25rem;"><strong>Age:</strong> ${escapeHTML(String(p.age)) || 'N/A'}</p>
+          <p style="font-size: 0.9rem; margin-bottom: 0.5rem;"><strong>Address:</strong> ${escapeHTML(p.address) || 'N/A'}</p>
           <h5 style="color: var(--color-gold-dark); margin-bottom: 0.35rem; font-size: 0.95rem; font-family: var(--font-serif);">Audited Document</h5>
           <p style="font-size: 0.9rem;">
             <strong>Type:</strong> ${current.document.type} <br>
@@ -2822,7 +2848,7 @@ function renderConfirmed(container) {
             </div>
             <div class="voucher-item">
               <label>Guest Name</label>
-              <span>${confirmed.guestName}</span>
+              <span>${escapeHTML(confirmed.guestName)}</span>
             </div>
             <div class="voucher-item">
               <label>Room & Floor</label>
@@ -2842,19 +2868,19 @@ function renderConfirmed(container) {
             </div>
             <div class="voucher-item full-width">
               <label>Selected Extras</label>
-              <span>${confirmed.extras}</span>
+              <span>${escapeHTML(confirmed.extras)}</span>
             </div>
           </div>
 
           <!-- Celebration message -->
           <div class="celebration-msg-box">
-            "Dear ${confirmed.guestName}, welcome to the Rubicorn family! Room ${confirmed.roomNo} has been reserved exclusively for you. Whether you are here to seek blessings at the sacred temples, explore local heritage, or rest after travel — we promise to make every moment comfortable. Our desk team is at your service 24x7. We look forward to welcoming you! 🙏"
+            "Dear ${escapeHTML(confirmed.guestName)}, welcome to the Rubicorn family! Room ${confirmed.roomNo} has been reserved exclusively for you. Whether you are here to seek blessings at the sacred temples, explore local heritage, or rest after travel — we promise to make every moment comfortable. Our desk team is at your service 24x7. We look forward to welcoming you! 🙏"
           </div>
 
           <!-- What happens next list -->
           <h4 style="margin-bottom:1rem; color:var(--color-gold);">What Happens Next?</h4>
           <ul class="nearby-list" style="margin-bottom:2.5rem;">
-            <li><i class="fa-solid fa-envelope"></i> Confirmation invoice voucher sent to <strong>${confirmed.email}</strong></li>
+            <li><i class="fa-solid fa-envelope"></i> Confirmation invoice voucher sent to <strong>${escapeHTML(confirmed.email)}</strong></li>
             <li><i class="fa-solid fa-passport"></i> Please carry original verification documents during front-desk check-in.</li>
             <li><i class="fa-solid fa-mobile-screen-button"></i> Keep your Booking ID <strong>${confirmed.bookingId}</strong> saved on your phone.</li>
           </ul>
@@ -3286,7 +3312,7 @@ function renderDashboardHome(workspace) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="font-family:monospace; font-weight:700; color:var(--color-gold);">${b.bookingId}</td>
-        <td><strong>${b.guestName}</strong></td>
+        <td><strong>${escapeHTML(b.guestName)}</strong></td>
         <td>Room ${b.roomId} (${b.floor})</td>
         <td style="font-size:0.8rem;">${b.checkIn} to ${b.checkOut}</td>
         <td style="text-align:center;">${b.nights}</td>
