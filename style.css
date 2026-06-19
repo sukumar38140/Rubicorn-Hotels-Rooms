@@ -425,13 +425,13 @@ img {
 }
 
 /* Stagger animations for mobile items */
-.mobile-menu-overlay.open .mobile-nav-item:nth-child(1) { transition-delay: 0.1s; }
-.mobile-menu-overlay.open .mobile-nav-item:nth-child(2) { transition-delay: 0.15s; }
-.mobile-menu-overlay.open .mobile-nav-item:nth-child(3) { transition-delay: 0.2s; }
-.mobile-menu-overlay.open .mobile-nav-item:nth-child(4) { transition-delay: 0.25s; }
-.mobile-menu-overlay.open .mobile-nav-item:nth-child(5) { transition-delay: 0.3s; }
-.mobile-menu-overlay.open .mobile-nav-item:nth-child(6) { transition-delay: 0.35s; }
-.mobile-menu-overlay.open .mobile-nav-cta { transition-delay: 0.4s; }
+.mobile-menu-overlay.open .mobile-nav-item:nth-child(2) { transition-delay: 0.1s; }
+.mobile-menu-overlay.open .mobile-nav-item:nth-child(3) { transition-delay: 0.15s; }
+.mobile-menu-overlay.open .mobile-nav-item:nth-child(4) { transition-delay: 0.2s; }
+.mobile-menu-overlay.open .mobile-nav-item:nth-child(5) { transition-delay: 0.25s; }
+.mobile-menu-overlay.open .mobile-nav-item:nth-child(6) { transition-delay: 0.3s; }
+.mobile-menu-overlay.open .mobile-nav-item:nth-child(7) { transition-delay: 0.35s; }
+.mobile-menu-overlay.open .mobile-nav-cta { transition-delay: 0.45s; }
 
 .mobile-nav-item:hover, .mobile-nav-item.active {
   color: var(--color-gold);
@@ -3657,7 +3657,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   /* Navigation */
   .desktop-nav { display: none; }
   .mobile-menu-toggle { display: flex; }
-  .desktop-only-lang { display: none !important; }
+  .desktop-only-lang { display: none !important; }\r
+  .admin-profile-link { display: none !important; }
 
   /* Hero Section Mobile/Tablet Overrides */
   .hero {
