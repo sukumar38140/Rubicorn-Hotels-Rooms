@@ -244,6 +244,10 @@ window.translateElement = function(element) {
   const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
   let node;
   while (node = walker.nextNode()) {
+    // Avoid translating option elements or elements with class "no-translate"
+    if (node.parentElement && (node.parentElement.tagName.toLowerCase() === 'option' || node.parentElement.closest('.no-translate'))) {
+      continue;
+    }
     if (node._originalValue === undefined) {
       node._originalValue = node.nodeValue;
     }
@@ -405,6 +409,7 @@ function router() {
   
   // Update nav item active status
   updateNavActiveLinks(cleanHash);
+  updateHeaderProfileLink();
   
   const appContainer = document.getElementById('app');
   appContainer.innerHTML = '';
@@ -459,6 +464,29 @@ function updateNavActiveLinks(currentHash) {
       }
     }
   });
+}
+
+function updateHeaderProfileLink() {
+  const profileLink = document.getElementById('header-admin-profile');
+  if (!profileLink) return;
+
+  const isLoggedIn = window.RubicornState && window.RubicornState.adminLoggedIn;
+  const userRole = window.RubicornState && window.RubicornState.userRole;
+
+  if (isLoggedIn) {
+    profileLink.setAttribute('href', '#/admin/dashboard');
+    const roleText = userRole === 'admin' ? 'Admin' : 'Staff';
+    profileLink.innerHTML = `
+      <i class="fa-solid fa-circle-user" style="color: var(--color-gold);"></i>
+      <span class="admin-profile-text">${roleText}</span>
+    `;
+  } else {
+    profileLink.setAttribute('href', '#/admin');
+    profileLink.innerHTML = `
+      <i class="fa-solid fa-user-shield" style="color: var(--color-gold);"></i>
+      <span class="admin-profile-text">Staff Login</span>
+    `;
+  }
 }
 
 // 3. Gemini Image Loader Simulation
@@ -2980,22 +3008,16 @@ function renderAdminLogin(container) {
         <div class="checkbox-group" style="gap:1.25rem; text-align:left; margin-bottom:2rem;">
           <div class="search-field">
             <label for="admin-email">Admin Email ID</label>
-            <input type="email" id="admin-email" value="admin@rubicorn.com" required>
+            <input type="email" id="admin-email" placeholder="email@rubicorn.in" required>
           </div>
           <div class="search-field">
             <label for="admin-pass">Secure Password</label>
-            <input type="password" id="admin-pass" value="Rubicorn@2025" required>
+            <input type="password" id="admin-pass" placeholder="••••••••" required>
           </div>
         </div>
         
         <button type="submit" class="btn-book-now" style="width:100%; padding:0.85rem;">Secure Log-in</button>
       </form>
-      
-      <div style="font-size:0.75rem; color:var(--color-ivory-dim); margin-top:2rem; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.02); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--color-card-border);">
-        <div style="font-weight: 700; color: var(--color-gold); margin-bottom: 0.25rem;"><i class="fa-solid fa-circle-info"></i> Seeded Review Credentials:</div>
-        • <strong>Admin (Owner / Super Powers)</strong>: <span style="font-family: monospace;">admin@rubicorn.com</span> / <span style="font-family: monospace;">Rubicorn@2025</span><br>
-        • <strong>Manager (Receptionist)</strong>: <span style="font-family: monospace;">manager@rubicorn.com</span> / <span style="font-family: monospace;">Manager@2025</span>
-      </div>
     </div>
   `;
 
@@ -3003,28 +3025,30 @@ function renderAdminLogin(container) {
     const email = document.getElementById('admin-email').value;
     const pass = document.getElementById('admin-pass').value;
     
-    if (email === 'admin@rubicorn.com' && pass === 'Rubicorn@2025') {
+    if (email.toLowerCase() === 'admin@rubicorn.in' && pass === 'Rubicorn@2025') {
       window.RubicornState.adminLoggedIn = true;
       window.RubicornState.userRole = 'admin';
       saveStateToStorage();
       
       // Notify active header
       updateNavActiveLinks('/admin/dashboard');
+      updateHeaderProfileLink();
       
       showToast('Welcome, Administrator (Owner / Super User)', 'success');
       window.location.hash = '#/admin/dashboard';
-    } else if (email === 'manager@rubicorn.com' && pass === 'Manager@2025') {
+    } else if (email.toLowerCase() === 'receptionist@rubicorn.in' && pass === 'Rubicorn@2025') {
       window.RubicornState.adminLoggedIn = true;
       window.RubicornState.userRole = 'manager';
       saveStateToStorage();
       
       // Notify active header
       updateNavActiveLinks('/admin/dashboard');
+      updateHeaderProfileLink();
       
-      showToast('Welcome, Manager/Receptionist (Receptionist Mode)', 'success');
+      showToast('Welcome, Receptionist (Receptionist Mode)', 'success');
       window.location.hash = '#/admin/dashboard';
     } else {
-      alert("Invalid login credentials.\n\nUse review options:\n- admin@rubicorn.com / Rubicorn@2025\n- manager@rubicorn.com / Manager@2025");
+      alert("Invalid login credentials.");
     }
   };
 }
@@ -3072,8 +3096,10 @@ function renderAdminDashboard(subview) {
   // Binds Logout
   document.getElementById('admin-logout-btn').onclick = () => {
     window.RubicornState.adminLoggedIn = false;
+    window.RubicornState.userRole = null;
     saveStateToStorage();
     updateNavActiveLinks('/');
+    updateHeaderProfileLink();
     showToast('Administrator logged out successfully.', 'info');
     window.location.hash = '#/admin';
   };
@@ -4166,6 +4192,8 @@ window.addEventListener('load', () => {
   const mobLangSelect = document.getElementById('mobile-lang-select');
   if (langSelect) langSelect.value = currentLang;
   if (mobLangSelect) mobLangSelect.value = currentLang;
+
+  updateHeaderProfileLink();
 
   // Bind dropdown change event listeners
   const onLangChange = (e) => {
