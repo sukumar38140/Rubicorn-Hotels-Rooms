@@ -381,6 +381,7 @@ function router() {
   // Stagger mobile menu close on route change
   document.getElementById('mobile-menu').classList.remove('open');
   document.getElementById('menu-toggle').classList.remove('open');
+  document.body.classList.remove('mobile-menu-open');
   
   const cleanHash = rawHash.replace(/^#/, '');
   const hashPathOnly = cleanHash.split('?')[0];
@@ -4259,6 +4260,7 @@ window.addEventListener('load', () => {
   menuToggle.onclick = () => {
     menuToggle.classList.toggle('open');
     mobileMenu.classList.toggle('open');
+    document.body.classList.toggle('mobile-menu-open');
   };
 
   // Setup click listeners for scroll links (Home sub-anchors)
